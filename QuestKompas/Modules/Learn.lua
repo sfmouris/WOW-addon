@@ -230,9 +230,10 @@ local function mayLearn()
   return true
 end
 
+-- Player position, skipped when the client hands out secret values (2.3).
 local function playerPoint()
   local m, x, y = C.GetPlayerPosition()
-  if not m then return nil end
+  if not m or not (ns.IsSafe(m) and ns.IsSafe(x) and ns.IsSafe(y)) then return nil end
   return { m = m, x = round4(x), y = round4(y) }
 end
 
