@@ -1,0 +1,12 @@
+<Bindings>
+	<Binding name="QUESTKOMPAS_TOGGLE" header="QUESTKOMPAS">
+		SlashCmdList.QUESTKOMPAS("toggle")
+	</Binding>
+	<Binding name="QUESTKOMPAS_NEXT">
+		SlashCmdList.QUESTKOMPAS("next")
+	</Binding>
+	<Binding name="QUESTKOMPAS_CLEAR">
+		SlashCmdList.QUESTKOMPAS("clear")
+	</Binding>
+	<Binding name="CLICK QuestKompasItemButton1:LeftButton"/>
+</Bindings>
