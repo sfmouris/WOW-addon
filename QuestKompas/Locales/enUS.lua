@@ -299,3 +299,7 @@ T.MOD_LOGTOOLS_TIP = "Clean up grey quests, notes and search."
 T.MOD_STATS_TIP = "XP per hour, quests to level and history."
 T.MOD_PARTY_TIP = "Share quests and see progress of party members."
 T.MOD_BRIDGES_TIP = "Uses locations from Questie and waypoints from TomTom when they are loaded."
+
+-- Minimap
+T.MINIMAP_QUESTS_FMT = "Quests: %s"
+T.MINIMAP_HINT = "Click: toggle the tracker. Right-click: settings. Drag: move."

@@ -277,3 +277,7 @@ T.MOD_LOGTOOLS_TIP = "Grijze quests opruimen, notities en zoeken."
 T.MOD_STATS_TIP = "XP per uur, quests tot level en historie."
 T.MOD_PARTY_TIP = "Quests delen en voortgang van groepsleden zien."
 T.MOD_BRIDGES_TIP = "Gebruikt locaties uit Questie en waypoints van TomTom als die geladen zijn."
+
+-- Minimap
+T.MINIMAP_QUESTS_FMT = "Quests: %s"
+T.MINIMAP_HINT = "Klik: tracker aan of uit. Rechtsklik: instellingen. Slepen: verplaatsen."

@@ -4,9 +4,11 @@
 local _, ns = ...
 
 local IB = ns:RegisterModule("ItemBar")
-local C, L = ns.Compat, ns.L
+local C, L, Style = ns.Compat, ns.L, ns.Style
+local COL = Style.color
 
-local SIZE, GAP = 32, 4
+local SIZE, GAP, PAD, HEAD = 32, 4, 4, 14
+local BINDING1 = "CLICK QuestKompasItemButton1:LeftButton"
 -- Button 1 needs a global name for CLICK bindings (Bindings.xml and
 -- SetOverrideBindingClick). Documented exception to spec 13.6.
 local BUTTON1_NAME = "QuestKompasItemButton1"
@@ -32,7 +34,8 @@ end
 
 local function createBar()
   bar = CreateFrame("Frame", nil, UIParent)
-  bar:SetSize(SIZE, SIZE + 12)
+  bar:SetSize(SIZE + 2 * PAD, HEAD + SIZE + PAD)
+  Style.Panel(bar, 0.55)
   bar:SetClampedToScreen(true)
   bar:SetMovable(true)
   bar:EnableMouse(true)
@@ -45,7 +48,7 @@ local function createBar()
     savePosition()
   end)
   local handle = bar:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-  handle:SetPoint("TOPLEFT", 0, 0)
+  handle:SetPoint("TOPLEFT", PAD + 1, -3)
   handle:SetText(L["ITEMBAR"])
   applyPosition()
   bar:Hide()
@@ -58,6 +61,19 @@ local function createButton(i)
   b:SetAttribute("type", "item")
   b.icon = b:CreateTexture(nil, "ARTWORK")
   b.icon:SetAllPoints()
+  b.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+  -- Thin frame around the icon.
+  for _, side in ipairs({ "TOP", "BOTTOM", "LEFT", "RIGHT" }) do
+    local e = b:CreateTexture(nil, "OVERLAY")
+    e:SetColorTexture(COL.edge[1], COL.edge[2], COL.edge[3], 1)
+    if side == "TOP" or side == "BOTTOM" then
+      e:SetPoint(side .. "LEFT") e:SetPoint(side .. "RIGHT") e:SetHeight(1)
+    else
+      e:SetPoint("TOP" .. side) e:SetPoint("BOTTOM" .. side) e:SetWidth(1)
+    end
+  end
+  b.hotkey = b:CreateFontString(nil, "OVERLAY", "NumberFontNormalSmallGray")
+  b.hotkey:SetPoint("TOPRIGHT", -2, -2)
   b.count = b:CreateFontString(nil, "OVERLAY", "NumberFontNormal")
   b.count:SetPoint("BOTTOMRIGHT", -2, 2)
   b.cooldown = CreateFrame("Cooldown", nil, b, "CooldownFrameTemplate")
@@ -117,7 +133,7 @@ function IB:Update()
     for i, q in ipairs(quests) do
       local b = buttons[i] or createButton(i)
       b:ClearAllPoints()
-      b:SetPoint("TOPLEFT", bar, "TOPLEFT", (i - 1) * (SIZE + GAP), -12)
+      b:SetPoint("TOPLEFT", bar, "TOPLEFT", PAD + (i - 1) * (SIZE + GAP), -HEAD)
       b:SetAttribute("item", itemString(q.itemLink))
       b.link, b.questTitle, b.logIndex = q.itemLink, q.title, q.logIndex
       b.icon:SetTexture(q.itemTexture or select(5, C.GetItemInfoInstant(q.itemLink)))
@@ -128,7 +144,7 @@ function IB:Update()
       buttons[i]:SetAttribute("item", nil)
       buttons[i].link = nil
     end
-    bar:SetWidth(math.max(SIZE, #quests * (SIZE + GAP) - GAP))
+    bar:SetWidth(math.max(SIZE, #quests * (SIZE + GAP) - GAP) + 2 * PAD)
     bar:SetShown(#quests > 0)
   end
   self:UpdateCounts()
@@ -151,8 +167,19 @@ function IB:UpdateCounts()
   end
 end
 
+-- Key text on button 1: the addon's own override key, else the binding
+-- from the game's key binding screen. A font string, so safe in combat.
+function IB:UpdateHotkey()
+  local b = buttons[1]
+  if not b then return end
+  local key = ns:GetSetting("itembar", "key")
+  if not key or key == "" then key = C.GetBindingKeyText(BINDING1) end
+  b.hotkey:SetText(key or "")
+end
+
 local boundKey
 function IB:ApplyKey()
+  self:UpdateHotkey()
   if C.InCombat() or not bar then return end
   local key = ns:GetSetting("itembar", "key")
   if key == boundKey then return end
@@ -172,6 +199,7 @@ function IB:OnEnable()
   ns:On("ZONE_CHANGED_NEW_AREA", "ItemBar", req)
   ns:On("BAG_UPDATE_DELAYED", "ItemBar", function() IB:UpdateCounts() end)
   ns:On("BAG_UPDATE_COOLDOWN", "ItemBar", function() IB:UpdateCounts() end)
+  ns:On("UPDATE_BINDINGS", "ItemBar", function() IB:UpdateHotkey() end)
   ns:On("QK_SETTING_CHANGED", "ItemBar", function(_, section)
     if section == "itembar" or section == nil then currentKey = "" req() end
   end)

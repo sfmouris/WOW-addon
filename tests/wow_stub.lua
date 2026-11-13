@@ -91,6 +91,8 @@ function regionMethods:SetHeight(h) self._h = h end
 function regionMethods:GetWidth() return self._w or 100 end
 function regionMethods:GetHeight() return self._h or 20 end
 function regionMethods:GetStringHeight() return 12 end
+function regionMethods:GetCenter() return 400, 300 end
+function regionMethods:GetEffectiveScale() return 1 end
 function regionMethods:SetScript(name, fn) self._scripts[name] = fn end
 function regionMethods:GetScript(name) return self._scripts[name] end
 function regionMethods:HookScript(name, fn) self._scripts[name] = fn end
@@ -283,6 +285,9 @@ _G.IsShiftKeyDown = function() return stub.shift end
 _G.IsControlKeyDown = function() return false end
 _G.IsAltKeyDown = function() return false end
 _G.GetPlayerFacing = function() return stub.facing end
+_G.GetCursorPosition = function() return stub.cursor[1], stub.cursor[2] end
+_G.GetBindingKey = function(action) return stub.bindings[action] end
+_G.GetBindingText = function(key) return key end
 _G.GetBuildInfo = function() return "1.60.1", "70888", "Nov 10 2026", 16001 end
 _G.PlaySound = noop
 _G.SOUNDKIT = { MAP_PING = 3175 }
@@ -417,6 +422,8 @@ function stub.Reset()
   stub.sent, stub.chat, stub.center, stub.errors = {}, {}, {}, {}
   stub.items = {}
   stub.settings = {}
+  stub.cursor, stub.bindings = { 0, 0 }, {}
+  _G.Minimap = _G.CreateFrame("Frame")
   stub.subcategories, stub.tooltips = {}, {}
   stub.unknownEvents = {}
   _G.QuestKompasDB, _G.QuestKompasCharDB = nil, nil
