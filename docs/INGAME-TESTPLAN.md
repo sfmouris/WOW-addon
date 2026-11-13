@@ -68,4 +68,4 @@ Zet vooraf aan: BugSack en BugGrabber, `/console scriptErrors 1`, `/console tain
 - `Compat.GreetingAvailable`: `GetAvailableLevel` staat niet in de export; bij NPC's met alleen een begroetingsvenster ontbreekt dan het questlevel voor de levelgrens.
 - `Geo.Bearing`-terugval zonder HereBeDragons gaat uit van (noord, west) uit `GetWorldPosFromMapPos`. Normaal wordt HereBeDragons gebruikt.
 - Factie, klasse en ras leest de addon zelf uit (`UnitFactionGroup`, `UnitClass`, `UnitRace`); hij werkt voor elke combinatie. Test bij voorkeur met minstens één Alliance- en één Horde-character, en bij de beloningshulp met een klasse die geen plate draagt.
-- Nog open uit spec 14: gebruik je Questie, TomTom of Leatrix, en moet de standaard tracker weg.
+- Spec 14 beantwoord: geen Questie, TomTom of Leatrix Plus; de standaard tracker blijft staan (optie verbergen blijft uit). Locaties komen dus uit de client en uit Leren; meet in fase 3 met `/qk dump` hoeveel quests een clientlocatie hebben.
