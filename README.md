@@ -43,6 +43,8 @@ Aanrader: installeer BugSack en BugGrabber, en zet `/console scriptErrors 1`.
 
 In de tracker: **klik** op een quest om erheen te navigeren, **Shift-klik** om hem in de chat te linken, **rechtsklik** voor het menu (navigeren, delen, notitie, nooit automatisch accepteren, opgeven). Houd **Shift** ingedrukt bij het aanspreken van een NPC om de automatisering voor dat venster over te slaan.
 
+Titelbalk van de tracker: knoppen voor het volgende doel, de instellingen, vergrendelen en inklappen. Past de lijst niet, dan scrol je met het muiswiel. De knop bij de minimap toont of verbergt de tracker (rechtsklik: instellingen, slepen: verplaatsen).
+
 Toetsen instellen: Esc, Opties, Toetsenbinding, sectie QuestKompas (tracker tonen, volgende doel, doel wissen, questitem 1).
 
 ## Modules

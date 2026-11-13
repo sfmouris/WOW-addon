@@ -2,7 +2,7 @@
 ## Title: QuestKompas
 ## Notes: Questhulp voor WoW Forever: tracker, navigatie, auto-quest en een zelflerende locatiedatabase.
 ## Author: Scott
-## Version: 0.8.0
+## Version: 0.9.0
 ## SavedVariables: QuestKompasDB
 ## SavedVariablesPerCharacter: QuestKompasCharDB
 ## OptionalDeps: Questie, TomTom, Pawn

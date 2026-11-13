@@ -1,6 +1,6 @@
 # In-game te controleren
 
-Alles hieronder is gebouwd en getest tegen een nagebootste client (`tests/`), niet in WoW Forever zelf. De API-namen en signaturen zijn gecontroleerd tegen de geëxporteerde interfacecode van **1.60.1 build 70888** (Gethe/wow-ui-source, branch `forever`). Wat een functie in de echte wereld teruggeeft, kan alleen in het spel blijken.
+Alles hieronder is gebouwd en getest tegen een nagebootste client (`tests/`), niet in WoW Forever zelf. De API-namen en signaturen zijn gecontroleerd tegen de geëxporteerde interfacecode van **1.60.1 build 70888** (Gethe/wow-ui-source, branch `forever`; de UI-ronde tegen build 70938). Wat een functie in de echte wereld teruggeeft, kan alleen in het spel blijken.
 
 Zet vooraf aan: BugSack en BugGrabber, `/console scriptErrors 1`, `/console taintLog 1`. Na de sessie: `Logs/taint.log` bekijken (in de `_forever_`-map).
 
@@ -62,6 +62,22 @@ Zet vooraf aan: BugSack en BugGrabber, `/console scriptErrors 1`, `/console tain
 - [ ] Groep van 2 (module Groep aan): delen, groepsquest-markering, voortgang van de ander in de tooltip. **TODO(verify)**: addonberichten buiten instances.
 - [ ] Leatrix Plus of ForeverPlus geladen: één waarschuwing. **TODO(verify)**: exacte mapnamen.
 - [ ] Forever Quest Pins geladen: eigen questgever-pins gaan uit. **TODO(verify)**: mapnaam.
+
+## 8. UI-ronde (0.9.0)
+Nagekeken tegen de export van build 70938. Uiterlijk en gevoel zijn alleen in het spel te beoordelen.
+- [ ] Tracker: titelbalk, iconen en tekst zijn scherp en leesbaar op schaal 0,7, 1,0 en 1,5; niets overlapt bij breedte 180 en 420.
+- [ ] De vier knoppen in de titelbalk werken en tonen een tooltip: volgende doel, instellingen, slot (icoon wisselt), inklappen (alleen titelbalk met het aantal quests; blijft zo na `/reload`).
+- [ ] Groepskop aanklikken: chevron draait, groep klapt in en uit; aantal staat rechts.
+- [ ] Voortgangsbalkje loopt mee bij voortgang en heeft de kleur van het kleurstaafje; afgeronde quest toont een groen vinkje.
+- [ ] Questmob doden: de regel flitst één keer en fadet uit; er blijft geen gele regel hangen. **TODO(verify)**: gedrag van de animatie als de regel tijdens de flits herbouwd wordt.
+- [ ] Meer quests dan de maximale hoogte: scrollen met het muiswiel, streepje rechts geeft de positie; past alles, dan zoomt het muiswiel boven de tracker gewoon de camera.
+- [ ] Ronddraaien: de pijltjes in de tracker draaien vloeiend mee; geen merkbaar fps-verlies met 25 quests.
+- [ ] In gevecht (vervagen aan): klikken en scrollen gaan door het venster heen; daarna werkt alles weer.
+- [ ] Navigatiepijl: groen als je erheen kijkt, geel opzij, rood als het doel achter je ligt; draait zonder schokken; schaal 0,7 tot 1,5 werkt direct.
+- [ ] `/qk` opent de hoofdpagina; de vier subpagina's staan eronder in de lijst; elke optie toont een tooltip. **TODO(verify)**: plaatsing van de sectiekoppen binnen een subpagina.
+- [ ] Minimapknop: staat op de rand, klik en rechtsklik werken, slepen volgt de cursor rond de minimap en blijft bewaard; uitzetten in de instellingen verbergt hem; `/qk reset` zet hem terug. **TODO(verify)**: afstand tot de rand bij een minimap die via Edit Mode is geschaald.
+- [ ] Questitembalk: paneel en kaders kloppen; na het binden van een toets (Toetsenbinding, QuestKompas) staat die op knop 1; geen taint na 10 gevechten.
+- [ ] Dialogen (bevestigen, notitie, export, statistieken): titelbalk, sluitkruisje en vlakke knoppen werken; Esc en Enter werken in het invoerveld.
 
 ## Overige open punten uit de code
 - `Compat.GetQuestDescription`: `GetQuestLogQuestText(logIndex)` op Mainline, de Vanilla-UI roept hem zonder argument aan.
