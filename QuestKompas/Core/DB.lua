@@ -15,14 +15,14 @@ DB.defaults = {
   tracker = { scale = 1.0, width = 260, locked = false, sort = "distance", hideDone = true,
               fadeInCombat = true, hideBlizzard = false, showFooter = true, maxRows = 30,
               bgAlpha = 0.6, shown = true },
-  nav = { mode = "own", useTomTom = false, autoAdvance = true, arriveYards = 10, sound = true },
+  nav = { mode = "own", useTomTom = false, autoAdvance = true, arriveYards = 10, sound = true, scale = 1.0 },
   auto = { accept = true, turnin = true, skipModifier = "SHIFT", repeatable = false,
            maxLevelAbove = 4, gossip = false, announce = true, autoReward = false },
   pins = { turnin = true, hotspots = true, givers = true, coords = true, minimap = true, nav = true },
   learn = { enabled = true, maxHotspots = 12, mergeYards = 40 },
   planner = { clusterYards = 150, preferNearDone = true, penalizeGroup = true },
   itembar = { enabled = true, max = 6, key = nil },
-  general = { language = "nl", debug = false },
+  general = { language = "nl", debug = false, minimap = true },
 }
 
 local function copy(v)

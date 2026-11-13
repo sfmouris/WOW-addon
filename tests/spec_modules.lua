@@ -187,6 +187,21 @@ S["navigator: source layers and arrow without errors"] = function()
   T.clean(ns)
 end
 
+S["navigator: arrow colour runs from green ahead to red behind"] = function()
+  local ns = stub.LoadAddon({ login = false })
+  local function near(a, b) return math.abs(a - b) < 1e-6 end
+  local r, g = ns.Navigator.ArrowColor(0)
+  T.ok(near(r, 0.25) and near(g, 1), "ahead is green")
+  r, g = ns.Navigator.ArrowColor(math.pi / 2)
+  T.ok(near(r, 1) and near(g, 1), "sideways is yellow")
+  r, g = ns.Navigator.ArrowColor(-math.pi / 2)
+  T.ok(near(r, 1) and near(g, 1), "sign does not matter")
+  r, g = ns.Navigator.ArrowColor(math.pi)
+  T.ok(near(r, 1) and near(g, 0.25), "behind is red")
+  r, g = ns.Navigator.ArrowColor(2 * math.pi)
+  T.ok(near(r, 0.25) and near(g, 1), "a full turn is ahead again")
+end
+
 S["navigator: /qk way parses coordinates and zones"] = function()
   stub.pos = { 52, 0.5, 0.5 }
   local ns = stub.LoadAddon()
