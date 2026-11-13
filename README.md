@@ -6,24 +6,23 @@ Ontwerp en scope: [`docs/QuestKompas-SPEC.md`](docs/QuestKompas-SPEC.md). In-gam
 
 ## Installeren op de Mac
 
-1. Haal de repo binnen, ergens buiten de gamemap:
-   ```bash
-   git clone https://github.com/sfmouris/WOW-addon.git ~/Code/WOW-addon
-   ```
-2. Installeer de addon (maakt een symlink, zodat je wijzigingen direct na `/reload` ziet):
-   ```bash
-   ~/Code/WOW-addon/tools/install.sh
-   ```
-   Het script zoekt in `/Applications/World of Warcraft` naar `_forever_` (of `_classic_beta_`) en vraagt het pad als het niets vindt. Het pad wordt bewaard in `.env.local`. Wil je liever een kopie: `tools/install.sh --copy`. Verwijderen: `tools/install.sh --remove`.
-3. Start WoW Forever volledig opnieuw en controleer in het spel:
-   ```
-   /run print(select(4, GetBuildInfo()))
-   /qk version
-   ```
-   Het eerste moet `16001` geven. Wijkt het af, pas dan `## Interface:` aan in `QuestKompas/QuestKompas.toc`.
-4. Aanrader: installeer BugSack en BugGrabber, en zet `/console scriptErrors 1`.
+**Makkelijkst (zip):**
+1. Pak `QuestKompas-<versie>.zip` uit (dubbelklik in Finder).
+2. Sluit WoW en dubbelklik op `Installeer QuestKompas.command`. Meldt macOS "onbekende ontwikkelaar": rechtsklik, Open, nogmaals Open.
+3. Start WoW Forever en typ `/qk version`. Je hoort `16001` te zien.
 
-Geen git? Download de zip van GitHub, pak uit, en sleep de map `QuestKompas` naar `/Applications/World of Warcraft/_forever_/Interface/AddOns/`.
+Met de hand kan ook: sleep de map `QuestKompas` uit de zip naar `/Applications/World of Warcraft/_forever_/Interface/AddOns/`.
+
+**Voor ontwikkelen (symlink, wijzigingen direct na `/reload`):**
+```bash
+git clone https://github.com/sfmouris/WOW-addon.git ~/Code/WOW-addon
+```
+```bash
+~/Code/WOW-addon/tools/install.sh
+```
+Het script zoekt `_forever_` (of `_classic_beta_`) en vraagt het pad als het niets vindt. Een nieuwe zip maak je met `tools/package.sh`.
+
+Aanrader: installeer BugSack en BugGrabber, en zet `/console scriptErrors 1`.
 
 ## Gebruik
 
