@@ -58,4 +58,48 @@ S["combat: no rebuild while in combat, rebuild after"] = function()
   T.clean(ns)
 end
 
+S["progress: average over objectives, nil without objectives"] = function()
+  local ns = stub.LoadAddon({ login = false })
+  local P = ns.Tracker.Progress
+  T.eq(P({ objectives = {} }), nil)
+  T.eq(P({ isComplete = true, objectives = {} }), 1)
+  T.eq(P({ objectives = { { done = 5, need = 10 } } }), 0.5)
+  T.eq(P({ objectives = { { done = 5, need = 10 }, { done = 0, need = 1, finished = true } } }), 0.75)
+  T.eq(P({ objectives = { { done = 99, need = 4 }, { done = -1, need = 2 } } }), 0.5, "clamped per objective")
+  T.eq(P({ objectives = { { done = 0, need = 0 } } }), 0, "need 0 does not divide by zero")
+end
+
+S["view height: content beyond maxRows scrolls"] = function()
+  local ns = stub.LoadAddon({ login = false })
+  local view, range = ns.Tracker.ViewHeight(100, 30)
+  T.eq(view, 100) T.eq(range, 0)
+  view, range = ns.Tracker.ViewHeight(1000, 30)
+  T.eq(view, 420) T.eq(range, 580)
+end
+
+S["title bar: minimize, lock and flash work without errors"] = function()
+  stub.log = H.log("Westfall", { H.quest(501), H.quest(502, { complete = true }) })
+  local ns = stub.LoadAddon()
+  local Tr = ns.Tracker
+  local frame = Tr:GetFrame()
+  T.ok(frame.minBtn and frame.lockBtn and frame.gearBtn, "title bar buttons exist")
+  frame.minBtn:GetScript("OnClick")(frame.minBtn, "LeftButton")
+  T.eq(ns.cdb.collapsed.all, true)
+  T.eq(frame:GetHeight(), 22, "collapsed to the title bar")
+  stub.Advance(3)
+  frame.minBtn:GetScript("OnClick")(frame.minBtn, "LeftButton")
+  T.eq(ns.cdb.collapsed.all, nil)
+  T.ok(frame:GetHeight() > 22)
+  frame.lockBtn:GetScript("OnClick")(frame.lockBtn, "LeftButton")
+  T.eq(ns:GetSetting("tracker", "locked"), true)
+  for _, b in ipairs(frame.buttons) do
+    b:GetScript("OnEnter")(b)
+    b:GetScript("OnLeave")(b)
+  end
+  Tr:Flash(501)
+  stub.Advance(2)
+  frame:GetScript("OnUpdate")(frame, 0.2)
+  T.clean(ns)
+end
+
 return S
