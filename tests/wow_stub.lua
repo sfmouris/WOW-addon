@@ -344,6 +344,11 @@ _G.Settings = {
     assertType(name, "string", "category name")
     return { GetID = function() return 42 end }, { AddInitializer = function(_, i) assert(i) end }
   end,
+  RegisterVerticalLayoutSubcategory = function(parent, name)
+    assertType(parent, "table", "parent category") assertType(name, "string", "subcategory name")
+    stub.subcategories[#stub.subcategories + 1] = name
+    return { GetID = function() return 43 end }, { AddInitializer = function(_, i) assert(i) end }
+  end,
   RegisterProxySetting = function(cat, variable, varType, name, default, get, set)
     assertType(cat, "table", "category") assertType(variable, "string", "variable")
     assertType(varType, "string", "varType") assertType(name, "string", "name")
@@ -353,10 +358,17 @@ _G.Settings = {
     stub.settings[variable] = { get = get, set = set }
     return { GetVariableType = function() return varType end, GetName = function() return name end }
   end,
-  CreateCheckbox = function(cat, setting) assert(cat and setting) end,
-  CreateSlider = function(cat, setting, options) assert(cat and setting and options) end,
-  CreateDropdown = function(cat, setting, options)
+  CreateCheckbox = function(cat, setting, tooltip)
+    assert(cat and setting)
+    stub.tooltips[setting.GetName()] = tooltip
+  end,
+  CreateSlider = function(cat, setting, options, tooltip)
+    assert(cat and setting and options)
+    stub.tooltips[setting.GetName()] = tooltip
+  end,
+  CreateDropdown = function(cat, setting, options, tooltip)
     assert(cat and setting) assertType(options, "function", "dropdown options")
+    stub.tooltips[setting.GetName()] = tooltip
     options()
   end,
   CreateSliderOptions = function(minV, maxV, rate)
@@ -405,6 +417,7 @@ function stub.Reset()
   stub.sent, stub.chat, stub.center, stub.errors = {}, {}, {}, {}
   stub.items = {}
   stub.settings = {}
+  stub.subcategories, stub.tooltips = {}, {}
   stub.unknownEvents = {}
   _G.QuestKompasDB, _G.QuestKompasCharDB = nil, nil
   _G.SlashCmdList = {}
