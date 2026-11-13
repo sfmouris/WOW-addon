@@ -11,6 +11,7 @@ Alleen uiterlijk en bediening; het gedrag van de modules is niet veranderd. Gete
 - Minimapknop (klik: tracker, rechtsklik: instellingen, slepen: verplaatsen; uit te zetten).
 - Questitembalk: paneel, bijgesneden iconen met kader, sneltoets op knop 1.
 - Afwijking van het plan: de questitembalk heeft geen eigen subpagina (één optie); die staat onder Tracker.
+- Mac: `tools/mac/Automatisch bijwerken.command` zet een achtergrondtaak (launchd) klaar die de repo bij het inloggen en elke vier uur bijwerkt, met een melding na een update. De updatelogica is getest met proefrepo's; het installeren van de taak zelf is niet op een Mac getest.
 - API-export bijgewerkt naar build 70938; alle nieuwe aanroepen daarin nagekeken.
 
 ## 0.8.0 (2026-11-11): afwerking

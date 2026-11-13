@@ -22,6 +22,8 @@ git clone https://github.com/sfmouris/WOW-addon.git ~/Code/WOW-addon
 ```
 Het script zoekt `_forever_` (of `_classic_beta_`) en vraagt het pad als het niets vindt. Een nieuwe zip maak je met `tools/package.sh`.
 
+**Automatisch bijwerken (Mac):** dubbelklik in de repo op `tools/mac/Automatisch bijwerken.command`. Dat zet een achtergrondtaak klaar die bij het inloggen en elke vier uur de nieuwste versie ophaalt en een melding toont als er iets is bijgewerkt (herstart WoW daarna). Het script regelt zo nodig ook de symlink naar de AddOns-map. Is een branch samengevoegd of verwijderd, dan stapt de taak zelf over naar de standaardbranch. Lokale wijzigingen worden nooit overschreven. Uitzetten: `Automatisch bijwerken uitzetten.command`. Logboek: `~/Library/Logs/QuestKompas-update.log`. Voorwaarde: git kan de repo zonder wachtwoord ophalen (openbare repo, of Terminal ingelogd bij GitHub); het script test dat en zegt wat je moet doen.
+
 Aanrader: installeer BugSack en BugGrabber, en zet `/console scriptErrors 1`.
 
 ## Gebruik
