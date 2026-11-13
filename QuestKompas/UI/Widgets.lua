@@ -4,7 +4,7 @@ local _, ns = ...
 
 local UI = {}
 ns.UI = UI
-local L, U = ns.L, ns.Util
+local L, Style = ns.L, ns.Style
 
 local function baseWindow(title, width, height)
   local f = CreateFrame("Frame", nil, UIParent)
@@ -17,25 +17,17 @@ local function baseWindow(title, width, height)
   f:RegisterForDrag("LeftButton")
   f:SetScript("OnDragStart", f.StartMoving)
   f:SetScript("OnDragStop", f.StopMovingOrSizing)
-  U.SkinFrame(f, 0.9)
-  f.title = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-  f.title:SetPoint("TOPLEFT", 10, -8)
-  f.title:SetPoint("TOPRIGHT", -30, -8)
-  f.title:SetJustifyH("LEFT")
-  f.title:SetText(title or "")
-  local close = CreateFrame("Button", nil, f, "UIPanelCloseButton")
-  close:SetPoint("TOPRIGHT", 2, 2)
+  f.title = Style.TitleBar(f, title)
+  f.title:SetPoint("TOPRIGHT", -26, -6)
+  Style.Panel(f, 0.92)
+  local close = Style.IconButton(f, "close", L["CLOSE"], function() f:Hide() end)
+  close:SetPoint("TOPRIGHT", -4, -3)
   f:Hide()
   return f
 end
 UI.BaseWindow = baseWindow
 
-local function button(parent, text, width)
-  local b = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
-  b:SetSize(width or 90, 22)
-  b:SetText(text)
-  return b
-end
+local button = Style.Button
 
 ----------------------------------------------------------------------------
 -- Confirm(text, onAccept)

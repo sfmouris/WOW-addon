@@ -238,3 +238,12 @@ T.OPT_SECTION_ITEMBAR = "Quest item bar"
 T.CONFIRM_RESET_ALL = "Reset all QuestKompas settings? Learned data is kept."
 T.RESET_ALL_DONE = "All settings reset."
 T.RESET_SECTION_DONE = "%s reset."
+
+-- Window buttons
+T.CLOSE = "Close"
+T.TIP_NEXT = "Next target"
+T.TIP_OPTIONS = "Settings"
+T.TIP_LOCK = "Lock windows"
+T.TIP_UNLOCK = "Unlock windows"
+T.TIP_MINIMIZE = "Collapse"
+T.TIP_EXPAND = "Expand"

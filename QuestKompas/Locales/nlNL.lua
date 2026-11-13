@@ -216,3 +216,12 @@ T.OPT_SECTION_ITEMBAR = "Questitembalk"
 T.CONFIRM_RESET_ALL = "Alle instellingen van QuestKompas terugzetten? Geleerde data blijft bewaard."
 T.RESET_ALL_DONE = "Alle instellingen teruggezet."
 T.RESET_SECTION_DONE = "%s teruggezet."
+
+-- Vensterknoppen
+T.CLOSE = "Sluiten"
+T.TIP_NEXT = "Volgende doel"
+T.TIP_OPTIONS = "Instellingen"
+T.TIP_LOCK = "Vensters vergrendelen"
+T.TIP_UNLOCK = "Vensters ontgrendelen"
+T.TIP_MINIMIZE = "Inklappen"
+T.TIP_EXPAND = "Uitklappen"

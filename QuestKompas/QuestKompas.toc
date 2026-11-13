@@ -26,6 +26,7 @@ Core\Combat.lua
 Core\DB.lua
 Core\Util.lua
 Core\Debug.lua
+UI\Style.lua
 
 Modules\QuestData.lua
 Modules\Learn.lua

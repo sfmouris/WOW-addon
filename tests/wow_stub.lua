@@ -119,7 +119,8 @@ frameMT = {
   __index = function(_, key)
     local m = regionMethods[key]
     if m then return m end
-    if key == "CreateTexture" or key == "CreateFontString" or key == "CreateAnimationGroup" then
+    if key == "CreateTexture" or key == "CreateFontString" or key == "CreateAnimationGroup"
+      or key == "CreateAnimation" then
       return function() return newRegion("region") end
     end
     -- WoW widget methods start with an upper-case letter; other keys are
