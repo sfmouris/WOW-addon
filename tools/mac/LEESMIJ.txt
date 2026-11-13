@@ -1,0 +1,18 @@
+QuestKompas installeren op de Mac
+=================================
+
+1. Sluit World of Warcraft.
+2. Dubbelklik op "Installeer QuestKompas.command".
+   Krijg je de melding "kan niet worden geopend" (onbekende ontwikkelaar)?
+   Klik dan met rechts (of Ctrl-klik) op het bestand, kies "Open" en daarna nogmaals "Open".
+3. Start WoW Forever en typ in de chat: /qk version
+
+Liever met de hand? Sleep de map "QuestKompas" naar
+  /Applications/World of Warcraft/_forever_/Interface/AddOns/
+(In de Battle.net-app: kies WoW Forever, tandwiel, "Show in Finder".)
+
+Bijwerken: download de nieuwe zip en doe hetzelfde. De oude versie wordt bewaard
+als "QuestKompas.vorige"; die mag je weggooien. Je instellingen en geleerde data
+staan in de WTF-map en blijven bewaard.
+
+Hulp in het spel: /qk help

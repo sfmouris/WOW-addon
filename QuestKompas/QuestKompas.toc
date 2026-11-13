@@ -1,0 +1,47 @@
+## Interface: 16001
+## Title: QuestKompas
+## Notes: Questhulp voor WoW Forever: tracker, navigatie, auto-quest en een zelflerende locatiedatabase.
+## Author: Scott
+## Version: 0.8.0
+## SavedVariables: QuestKompasDB
+## SavedVariablesPerCharacter: QuestKompasCharDB
+## OptionalDeps: Questie, TomTom, Pawn
+## AddonCompartmentFunc: QuestKompas_OnCompartmentClick
+## IconTexture: Interface\AddOns\QuestKompas\UI\Media\icon
+
+Libs\LibStub\LibStub.lua
+Libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
+Libs\HereBeDragons\HereBeDragons-2.0.lua
+Libs\HereBeDragons\HereBeDragons-Pins-2.0.lua
+Libs\LibSerialize\LibSerialize.lua
+Libs\LibDeflate\LibDeflate.lua
+
+Locales\enUS.lua
+Locales\nlNL.lua
+
+Core\Init.lua
+Core\Compat.lua
+Core\Events.lua
+Core\Combat.lua
+Core\DB.lua
+Core\Util.lua
+Core\Debug.lua
+
+Modules\QuestData.lua
+Modules\Learn.lua
+Modules\Navigator.lua
+Modules\Planner.lua
+Modules\Tracker.lua
+Modules\AutoQuest.lua
+Modules\RewardHelper.lua
+Modules\MapPins.lua
+Modules\ItemBar.lua
+Modules\LogTools.lua
+Modules\Stats.lua
+Modules\Party.lua
+Modules\Bridges.lua
+
+UI\Widgets.lua
+UI\Options.lua
+UI\ExportFrame.lua
+Slash.lua

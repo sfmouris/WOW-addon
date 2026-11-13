@@ -1,0 +1,240 @@
+-- QuestKompas: locale infrastructure and English base strings (spec 9).
+-- WoW has no Dutch client, so the language is an addon setting
+-- (general.language: "nl", "en" or "auto" = English).
+local _, ns = ...
+
+ns.Locales = ns.Locales or {}
+local base = {}
+ns.Locales.enUS = base
+local active = base
+
+local L = {}
+-- Methods are stored with rawset so the __index fallback never shadows them.
+rawset(L, "SetLanguage", function(_, lang)
+  if lang == "nl" and ns.Locales.nlNL then active = ns.Locales.nlNL else active = base end
+end)
+rawset(L, "GetActive", function() return active end)
+setmetatable(L, {
+  __index = function(_, key)
+    local v = active[key]
+    if v == nil then v = base[key] end
+    if v == nil then
+      if ns.Debug then ns.Debug:Trace("ontbrekende tekst:", tostring(key)) end
+      return key
+    end
+    return v
+  end,
+})
+ns.L = L
+
+local T = base
+-- General
+T.YES, T.NO, T.OK, T.CANCEL, T.NONE, T.RESET = "Yes", "No", "OK", "Cancel", "none", "Reset"
+T.DONE, T.FAILED, T.ELITE, T.GROUP, T.NOTE, T.NEXT = "done", "failed", "Elite", "Group", "Note", "Next"
+T.ABANDON, T.IMPORT, T.LOCKED, T.ITEMBAR = "Abandon", "Import", "(locked)", "Quest items"
+T.REWARDS, T.SELL_PRICE, T.CURRENT = "Rewards", "Sell price", "Equipped"
+T.MODULE_OFF = "Module %s is turned off."
+T.MODULE_DISABLED_ERRORS = "Module %s failed repeatedly and is disabled until /reload."
+T.MODULE_DISABLED_ENABLE = "Module %s failed to start and has been disabled."
+T.UNKNOWN_COMMAND = "Unknown command: %s"
+T.NO_SETTINGS = "The settings panel is not available."
+
+-- Help
+T.HELP_1 = "/qk  settings | toggle | lock | reset"
+T.HELP_2 = "/qk next | way x y [zone] | clear"
+T.HELP_3 = "/qk auto | grey | find text | share"
+T.HELP_4 = "/qk stats [reset]"
+T.HELP_5 = "/qk export [zone|all] | import"
+T.HELP_6 = "/qk debug [profile] | dump | plan debug"
+T.HELP_7 = "/qk version"
+
+-- Tracker
+T.GROUP_READY = "Ready to turn in"
+T.GROUP_HERE = "This zone"
+T.GROUP_OTHER = "Other zones"
+T.NO_QUESTS = "No quests in your log"
+T.MORE_FMT = "... and %d more"
+T.XP_FMT = "%s XP"
+T.XP_PER_HOUR_FMT = "%s XP/h"
+T.QUESTS_TO_LEVEL_FMT = "~%d quests to level"
+T.YARDS_SHORT_FMT = "%.0f yd"
+T.OTHER_ZONE_SHORT = "zone"
+T.UNKNOWN_SHORT = "?"
+T.GROUP_SUGGESTED = "Group quest: %d players suggested"
+T.LOCATION_SOURCE = "Location: %s"
+T.LOCATION_UNKNOWN = "Location unknown"
+T.SOURCE_CLIENT = "game (waypoint)"
+T.SOURCE_POI = "game (map)"
+T.SOURCE_QUESTIE = "Questie"
+T.SOURCE_LEARNED = "learned"
+T.SOURCE_USER = "own point"
+T.TRACKER_HINT = "Click: navigate. Shift-click: link. Right-click: menu."
+T.MENU_NAVIGATE = "Navigate here"
+T.MENU_OPEN_LOG = "Open in quest log"
+T.MENU_SHARE = "Share with group"
+T.MENU_LFM = "Look for group (chat)"
+T.MENU_WATCH = "Watch"
+T.MENU_UNWATCH = "Stop watching"
+T.MENU_NOTE = "Add note"
+T.MENU_BLACKLIST = "Never auto-accept"
+T.MENU_UNBLACKLIST = "Allow auto-accept again"
+T.MENU_UP = "Move up"
+T.MENU_DOWN = "Move down"
+T.MENU_ABANDON = "Abandon..."
+T.LFM_FMT = "LFM %s (%s, %d players)"
+T.LOCKED_ON = "Windows locked."
+T.LOCKED_OFF = "Windows unlocked."
+T.POSITIONS_RESET = "Window positions reset."
+
+-- Navigator
+T.YARDS_FMT = "%.0f yd"
+T.OTHER_ZONE = "other zone"
+T.NAV_UNKNOWN = "Location of %s is unknown."
+T.NEXT_NONE = "No next target found."
+T.WAY_USAGE = "Usage: /qk way 45.2 67.8 [zone]"
+T.WAY_NO_ZONE = "Zone not found: %s"
+T.WAY_NO_POSITION = "Your position is not available here."
+
+-- AutoQuest
+T.AUTO_ACCEPTED = "accepted %s"
+T.AUTO_TURNED_IN = "turned in %s"
+T.AUTO_ON = "Auto quest on."
+T.AUTO_OFF = "Auto quest off."
+T.LOG_FULL = "Quest log full"
+T.OVERLAP_WARNING = "%s also automates quests. Turn one of them off to avoid double actions."
+T.OVERLAP_PINS = "%s already shows available quests; QuestKompas quest giver pins are now off."
+
+-- Learn
+T.LEARN_DESCRIBE = "Last time: %d hotspots"
+T.LEARN_DESCRIBE_GIVER = "Last time: %d hotspots, picked up from %s"
+T.LEARNED_COUNT_FMT = "Learned quests: %d"
+T.EXPORT_TITLE = "Export"
+T.EXPORT_TITLE_FMT = "Export: %d quests, %d characters (Cmd+C to copy)"
+T.EXPORT_FAILED = "Export failed: %s"
+T.IMPORT_TITLE = "Import: paste the text and press Import"
+T.IMPORT_FAILED = "Import failed: %s"
+T.IMPORT_CONFIRM_FMT = "Import %d quests (%d new)?"
+T.IMPORT_DONE_FMT = "Imported %d quests, %d new."
+
+-- LogTools
+T.CONFIRM_ABANDON = "Abandon %s?"
+T.GREY_TITLE = "Grey quests"
+T.GREY_NONE = "No grey quests in your log."
+T.GREY_ALL_FMT = "Abandon all (%d)"
+T.GREY_CONFIRM1_FMT = "Abandon all %d grey quests?"
+T.GREY_CONFIRM2_FMT = "Really abandon %d quests? This cannot be undone."
+T.GREY_DONE_FMT = "%d quests abandoned."
+T.LOG_ALMOST_FULL_FMT = "Quest log %d/%d. Candidates to abandon: %s"
+T.NOTE_PROMPT = "Note for %s (max 300 characters):"
+T.FIND_USAGE = "Usage: /qk find text"
+T.FIND_NONE = "Nothing found for \"%s\"."
+T.FIND_RESULTS = "%d results for \"%s\" (* = in your log):"
+
+-- Stats
+T.STATS_TITLE = "QuestKompas statistics"
+T.STATS_SESSION_FMT = "Session: %s"
+T.STATS_XP_FMT = "XP: %s (%s per hour)"
+T.STATS_QUESTXP_FMT = "Quest XP: %s (%s per hour)"
+T.STATS_QUESTS_FMT = "Quests: %d (%s per hour)"
+T.STATS_MONEY_FMT = "Money from quests: %s"
+T.STATS_TTL_FMT = "Time to level: %s"
+T.STATS_QTL_FMT = "Quests to level: %s"
+T.STATS_HISTORY = "Last turn-ins:"
+T.STATS_RESET = "Session statistics reset."
+
+-- Party
+T.PARTY_NOT_IN_GROUP = "You are not in a group."
+T.PARTY_SHARED_FMT = "%d quests shared."
+
+-- Map
+T.PIN_CLICK_HINT = "Click to navigate"
+T.PIN_TURNIN = "Turn in here"
+T.PIN_HOTSPOT_FMT = "Progress spot (%d times)"
+T.PIN_NAV = "Navigation target"
+T.COORDS_FMT = "Player: %s    Cursor: %s"
+T.PLAN_LENGTH_FMT = "Route: %.0f yd planned versus %.0f yd in log order"
+
+-- Debug / version
+T.DEBUG_ON = "Debug mode on."
+T.DEBUG_OFF = "Debug mode off."
+T.PROFILE_STARTED = "Profiling started; run /qk debug profile again for the report."
+T.VERSION_FMT = "version %s, TOC %d, client %s (%s build %s)"
+T.VERSION_MISMATCH = "The client interface number differs from the TOC. Update ## Interface in QuestKompas.toc."
+T.BRIDGES = "Bridges"
+
+-- Key bindings
+T.BIND_TOGGLE = "Show or hide tracker"
+T.BIND_NEXT = "Next target"
+T.BIND_CLEAR = "Clear navigation target"
+T.BIND_ITEM1 = "Use quest item 1"
+
+-- Options
+T.OPT_GENERAL = "General"
+T.OPT_LANGUAGE = "Language"
+T.OPT_LANGUAGE_TIP = "Language of QuestKompas' own texts. Quest texts come from the game."
+T.OPT_LANG_AUTO = "Automatic (English)"
+T.OPT_PERCHAR = "Settings per character"
+T.OPT_PERCHAR_TIP = "When on, changes are stored for this character only."
+T.OPT_DEBUG = "Debug mode"
+T.OPT_MODULES = "Modules"
+T.OPT_MODULE_TIP = "Turn this module on or off."
+T.MOD_TRACKER, T.MOD_NAVIGATOR, T.MOD_PLANNER = "Tracker", "Navigator (arrow)", "Planner (order)"
+T.MOD_LEARN, T.MOD_AUTOQUEST, T.MOD_REWARDHELPER = "Learn (location database)", "Auto quest", "Reward helper"
+T.MOD_MAPPINS, T.MOD_ITEMBAR, T.MOD_LOGTOOLS = "Map pins", "Quest item bar", "Log tools"
+T.MOD_STATS, T.MOD_PARTY, T.MOD_BRIDGES = "Statistics", "Party", "Questie and TomTom bridges"
+T.OPT_TRACKER = "Tracker"
+T.OPT_SORT = "Sort by"
+T.SORT_DISTANCE, T.SORT_LEVEL, T.SORT_ZONE, T.SORT_MANUAL = "Distance", "Level", "Zone", "Manual"
+T.OPT_SCALE = "Scale"
+T.OPT_WIDTH = "Width"
+T.OPT_MAXROWS = "Maximum rows"
+T.OPT_BGALPHA = "Background opacity"
+T.OPT_LOCKED = "Lock windows"
+T.OPT_HIDEDONE = "Hide finished objectives"
+T.OPT_FADE = "Fade in combat"
+T.OPT_FOOTER = "Show footer"
+T.OPT_HIDEBLIZZ = "Hide the default quest tracker"
+T.OPT_HIDEBLIZZ_TIP = "Makes the default tracker invisible out of combat. Experimental."
+T.OPT_NAV = "Navigation"
+T.OPT_NAVMODE = "Arrow"
+T.NAV_OWN, T.NAV_NATIVE = "Own arrow", "Built-in navigation"
+T.OPT_TOMTOM = "Use TomTom when loaded"
+T.OPT_AUTOADVANCE = "Advance to the next target automatically"
+T.OPT_SOUND = "Sound on arrival"
+T.OPT_ARRIVE = "Arrival distance (yards)"
+T.OPT_AUTO = "Auto quest"
+T.OPT_ACCEPT = "Accept quests automatically"
+T.OPT_TURNIN = "Turn in quests automatically"
+T.OPT_SKIPMOD = "Hold to skip"
+T.OPT_REPEATABLE = "Also repeatable quests"
+T.OPT_MAXLEVEL = "Max levels above you"
+T.OPT_GOSSIP = "Skip single gossip option"
+T.OPT_GOSSIP_TIP = "Only for plain chat options, never at vendors, trainers, flight masters or banks."
+T.OPT_ANNOUNCE = "Chat line per action"
+T.OPT_AUTOREWARD = "Pick the most valuable reward if nothing is an upgrade"
+T.OPT_AUTOREWARD_TIP = "Off by default. Upgrade check: item level only."
+T.OPT_PINS = "Map pins"
+T.OPT_PIN_TURNIN = "Turn-in points"
+T.OPT_PIN_HOTSPOTS = "Progress hotspots"
+T.OPT_PIN_GIVERS = "Learned quest givers"
+T.OPT_PIN_NAV = "Navigation target"
+T.OPT_PIN_MINIMAP = "Also on the minimap"
+T.OPT_PIN_COORDS = "Coordinates on the world map"
+T.OPT_LEARN = "Learning"
+T.OPT_LEARN_ON = "Learn locations while playing"
+T.OPT_MERGE = "Merge hotspots within (yards)"
+T.OPT_MAXHOT = "Hotspots per objective"
+T.OPT_PLANNER = "Planner"
+T.OPT_CLUSTER = "One stop within (yards)"
+T.OPT_NEARDONE = "Prefer nearly finished quests"
+T.OPT_PENALGROUP = "Penalise group quests when solo"
+T.OPT_ITEMBAR = "Quest item bar"
+T.OPT_ITEMMAX = "Number of buttons"
+T.OPT_RESET = "Reset"
+T.OPT_RESET_ALL = "All settings"
+T.OPT_SECTION_TRACKER, T.OPT_SECTION_NAV, T.OPT_SECTION_AUTO = "Tracker", "Navigation", "Auto quest"
+T.OPT_SECTION_PINS, T.OPT_SECTION_LEARN, T.OPT_SECTION_PLANNER = "Map pins", "Learning", "Planner"
+T.OPT_SECTION_ITEMBAR = "Quest item bar"
+T.CONFIRM_RESET_ALL = "Reset all QuestKompas settings? Learned data is kept."
+T.RESET_ALL_DONE = "All settings reset."
+T.RESET_SECTION_DONE = "%s reset."
