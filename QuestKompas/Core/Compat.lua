@@ -166,6 +166,15 @@ function C.UnitGUIDAndName(unit)
   return guid, name
 end
 
+-- Abbreviated key text for a binding action, or nil when unbound. Both are
+-- plain globals; FrameXML calls GetBindingText(GetBindingKey(action), true).
+function C.GetBindingKeyText(action)
+  local getKey, getText = global("GetBindingKey"), global("GetBindingText")
+  local key = getKey and getKey(action)
+  if not key or key == "" then return nil end
+  return getText and getText(key, true) or key
+end
+
 function C.GetPlayerFacing()
   local fn = global("GetPlayerFacing")
   if not fn then return nil end

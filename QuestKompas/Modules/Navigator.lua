@@ -1,10 +1,10 @@
 -- QuestKompas: arrow and distance to the active target (spec 4.4).
-local ADDON, ns = ...
+local _, ns = ...
 
 local Nav = ns:RegisterModule("Navigator")
-local C, Geo, L = ns.Compat, ns.Geo, ns.L
+local C, Geo, L, Style = ns.Compat, ns.Geo, ns.L, ns.Style
 
-local MEDIA = "Interface\\AddOns\\" .. ADDON .. "\\UI\\Media\\"
+local MEDIA, COL = Style.MEDIA, Style.color
 local RESOLVE_TTL, POI_TTL = 2, 2
 
 Nav.target = nil        -- { kind = "quest", questID } or { kind = "point", mapID, x, y, title }
@@ -102,9 +102,26 @@ local function savePosition(frame)
   ns.cdb.positions.arrow = { point, x, y, relPoint }
 end
 
+-- Arrow tint for the angle between facing and target (radians, any range):
+-- green when heading straight at it, yellow sideways, red when it is behind.
+function Nav.ArrowColor(relAngle)
+  -- Deviation as a fraction of a half turn, 0 (ahead) to 1 (behind).
+  local dev = math.acos(math.max(-1, math.min(1, math.cos(relAngle or 0)))) / math.pi
+  local r = dev < 0.5 and dev * 2 or 1
+  local g = dev < 0.5 and 1 or (1 - dev) * 2
+  return 0.25 + 0.75 * r, 0.25 + 0.75 * g, 0.25
+end
+
+local function turnArrow(f, facing)
+  if not (Nav.bearing and facing) then return end
+  local rel = Geo.RelativeAngle(Nav.bearing, facing)
+  f.arrow:SetRotation(rel)
+  f.arrow:SetVertexColor(Nav.ArrowColor(rel))
+end
+
 local function createArrow()
   local f = CreateFrame("Frame", nil, UIParent)
-  f:SetSize(64, 80)
+  f:SetSize(150, 96)
   f:SetFrameStrata("MEDIUM")
   f:SetClampedToScreen(true)
   f:SetMovable(true)
@@ -120,32 +137,41 @@ local function createArrow()
   f:SetScript("OnMouseUp", function(_, button)
     if button == "RightButton" then Nav:Clear() end
   end)
+  -- Every frame: only the facing changes; the bearing comes from the ticker.
+  f:SetScript("OnUpdate", function(self)
+    if self.arrow:IsShown() then turnArrow(self, C.GetPlayerFacing()) end
+  end)
 
   local tex = f:CreateTexture(nil, "ARTWORK")
-  tex:SetSize(48, 48)
+  tex:SetSize(44, 44)
   tex:SetPoint("TOP", 0, 0)
   tex:SetTexture(MEDIA .. "arrow")
-  tex:SetVertexColor(0.3, 0.9, 1.0)
+  tex:SetVertexColor(COL.accent[1], COL.accent[2], COL.accent[3])
   f.arrow = tex
 
   local check = f:CreateTexture(nil, "ARTWORK")
-  check:SetSize(40, 40)
-  check:SetPoint("TOP", 0, -4)
+  check:SetSize(38, 38)
+  check:SetPoint("TOP", 0, -3)
   check:SetTexture(MEDIA .. "check")
-  check:SetVertexColor(0.3, 1.0, 0.3)
+  check:SetVertexColor(COL.good[1], COL.good[2], COL.good[3])
   check:Hide()
   f.check = check
 
-  local dist = f:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-  dist:SetPoint("TOP", tex, "BOTTOM", 0, -1)
+  -- Text block on a small panel so it stays readable over any terrain.
+  local info = CreateFrame("Frame", nil, f)
+  info:SetPoint("TOPLEFT", 0, -48)
+  info:SetPoint("BOTTOMRIGHT")
+  Style.Panel(info, 0.55)
+  local dist = info:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  dist:SetPoint("TOP", 0, -5)
   f.dist = dist
-  local title = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-  title:SetPoint("TOP", dist, "BOTTOM", 0, -1)
-  title:SetWidth(200)
+  local title = info:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+  title:SetPoint("TOP", dist, "BOTTOM", 0, -2)
+  title:SetWidth(140)
   title:SetWordWrap(false)
   f.title = title
-  local eta = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-  eta:SetPoint("TOP", title, "BOTTOM", 0, -1)
+  local eta = info:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+  eta:SetPoint("TOP", title, "BOTTOM", 0, -2)
   f.eta = eta
 
   local pos = ns.cdb.positions.arrow
@@ -191,6 +217,7 @@ function Nav:UpdateArrow()
   end
   arrow:Show()
   arrow.title:SetText(p.title or "")
+  self.bearing = nil
   local d = Geo.Distance(pm, px, py, p.mapID, p.x, p.y)
   if not d then
     arrow.arrow:Hide()
@@ -215,8 +242,8 @@ function Nav:UpdateArrow()
   end
   arrow.check:Hide()
   arrow.arrow:Show()
-  local bearing = Geo.Bearing(pm, px, py, p.mapID, p.x, p.y)
-  if bearing then arrow.arrow:SetRotation(Geo.RelativeAngle(bearing, facing)) end
+  self.bearing = Geo.Bearing(pm, px, py, p.mapID, p.x, p.y)
+  turnArrow(arrow, facing)
   arrow.dist:SetText(string.format(L["YARDS_FMT"], d))
 
   -- ETA from a smoothed approach speed.
@@ -277,6 +304,10 @@ function Nav:Apply()
   applyTomTom(point)
   if point and useOwnArrow() then
     if not arrow then arrow = createArrow() end
+    arrow:SetScale(ns.Util.Clamp(ns:GetSetting("nav", "scale") or 1, 0.7, 1.5))
+    local q = t.kind == "quest" and ns.QuestData:Get(t.questID)
+    local c = q and q.color or COL.accent
+    arrow.title:SetTextColor(c[1], c[2], c[3])
     arrow:Show()
     startTicker()
     self:UpdateArrow()

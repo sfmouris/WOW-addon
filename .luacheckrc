@@ -29,7 +29,7 @@ read_globals = {
   "CreateSettingsListSectionHeaderInitializer", "CreateSettingsButtonInitializer", "ChatFrameUtil",
   "ClearOverrideBindings", "SetOverrideBindingClick", "UiMapPoint", "CreateVector2D", "Item",
   "QuestDifficultyColors", "SOUNDKIT", "PlaySound", "Enum", "LibStub", "QuestieLoader", "TomTom",
-  "HBD_PINS_WORLDMAP_SHOW_CONTINENT",
+  "HBD_PINS_WORLDMAP_SHOW_CONTINENT", "Minimap", "GetCursorPosition",
   -- API namespaces
   "C_AddOns", "C_QuestLog", "C_TaskQuest", "C_Map", "C_SuperTrack", "C_GossipInfo", "C_Item", "C_ChatInfo",
   "C_Timer",

@@ -152,6 +152,9 @@ Acceptatie:
 
 Gedrag:
 - Verplaatsbaar, vergrendelbaar, schaalbaar venster. Positie per character opgeslagen.
+- Titelbalk met icoonknoppen: volgende doel, instellingen, slot, inklappen (venster krimpt tot de titelbalk en toont dan het aantal quests; onthouden per character).
+- Groepskoppen met chevron en aantal; per quest een dun voortgangsbalkje in de questkleur (gemiddelde over de doelen); vinkje bij afgeronde quests en doelen.
+- Past de lijst niet binnen de maximale hoogte (`maxRows`), dan scrolt de inhoud met het muiswiel; er wordt niets afgekapt.
 - Sortering (instelbaar): op afstand (standaard), op level, op zone, handmatig.
 - Groepering: "Klaar om in te leveren" bovenaan, daarna huidige zone, daarna overige zones (ingeklapt).
 - Per quest één kopregel: `[14] Titel` in moeilijkheidskleur, rechts afstand in yards en een richtingsindicator. Daaronder doelen met voortgang `3/10`; afgeronde doelen grijs of verborgen (instelbaar).
@@ -362,6 +365,8 @@ Gedrag:
 ### 4.15 Options (P1 basis, daarna meegroeien)
 - Registratie in het standaard instellingenmenu via de `Settings`-API (`Settings.RegisterVerticalLayoutCategory`, `Settings.RegisterAddOnSetting`, `Settings.CreateCheckbox`, `Settings.CreateSlider`, `Settings.CreateDropdown`, `Settings.RegisterAddOnCategory`). **[VERIFIEER]** exacte signaturen in de export; ze zijn tussen patches gewijzigd.
 - Knop in het addon-compartiment (TOC-veld `AddonCompartmentFunc`).
+- Subpagina's via `Settings.RegisterVerticalLayoutSubcategory`: hoofdpagina (algemeen, modules, terugzetten) plus Tracker, Navigatie, Auto-quest, Kaart en leren. Elke optie heeft een tooltip.
+- Minimapknop (eigen frame, geen bibliotheek; instelling `general.minimap`, standaard aan): klik toont of verbergt de tracker, rechtsklik opent de instellingen, slepen verplaatst hem langs de rand (hoek per character).
 - Profielen: account-standaard plus optioneel per character overschrijven. Geen AceDB nodig; eigen eenvoudige merge met defaults.
 - Knop "Alles terugzetten" en per module "Module terugzetten".
 
@@ -612,14 +617,14 @@ defaults = {
               Party = false, Bridges = true },
   tracker = { scale = 1.0, width = 260, locked = false, sort = "distance", hideDone = true,
               fadeInCombat = true, hideBlizzard = false, showFooter = true, maxRows = 30 },
-  nav = { mode = "own", useTomTom = false, autoAdvance = true, arriveYards = 10, sound = true },
+  nav = { mode = "own", useTomTom = false, autoAdvance = true, arriveYards = 10, sound = true, scale = 1.0 },
   auto = { accept = true, turnin = true, skipModifier = "SHIFT", repeatable = false,
            maxLevelAbove = 4, gossip = false, announce = true, autoReward = false },
   pins = { turnin = true, hotspots = true, givers = true, coords = true, minimap = true },
   learn = { enabled = true, maxHotspots = 12, mergeYards = 40 },
   planner = { clusterYards = 150, preferNearDone = true, penalizeGroup = true },
   itembar = { enabled = true, max = 6, key = nil },
-  general = { language = "auto", debug = false },
+  general = { language = "auto", debug = false, minimap = true },
 }
 ```
 
@@ -660,11 +665,12 @@ Alle namen **[VERIFIEER]** tegen de event-documentatie in de export; registreer 
 ## 8. Interface en bediening
 
 ### 8.1 Visuele stijl
-- Sober en leesbaar, aansluitend op de standaard UI. Achtergrond donker met 60% dekking, instelbaar.
+- Strak en modern, sober en leesbaar. Eén gedeelde stijl (`UI/Style.lua`) voor tracker, pijl, itembalk en dialogen: donker paneel met 60% dekking (instelbaar), titelbalk met accentlijn in cyaan, icoonknoppen met tooltip in plaats van tekstknoppen, eigen witte tintbare iconen (`tools/make_media.py`).
+- Navigatiepijl kleurt van groen (rechtdoor) via geel naar rood (achter je) en draait per frame mee; schaal instelbaar.
 - Lettertype: standaard gamefont (`GameFontNormalSmall`, `GameFontHighlightSmall`), schaalbaar via vensterschaal.
 - Kleuren per quest: vaste reeks van 8 goed onderscheidbare kleuren, toegewezen op volgorde van acceptatie; dezelfde kleur op kaartpins en in de tracker.
 - Moeilijkheidskleuren via `GetQuestDifficultyColor(level)`.
-- Geen animaties behalve een korte flits (0,3 s) op een regel bij voortgang.
+- Geen animaties behalve een korte flits die uitfadet (0,3 s) op een regel bij voortgang.
 
 ### 8.2 Slash-commando's
 | Commando | Werking |

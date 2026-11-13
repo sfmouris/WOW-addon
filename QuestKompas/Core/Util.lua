@@ -236,18 +236,5 @@ end
 -- so no texture file is needed (8.1: dark, 60% opacity by default).
 ----------------------------------------------------------------------------
 function U.SkinFrame(frame, alpha)
-  if not frame.qkBg then
-    local bg = frame:CreateTexture(nil, "BACKGROUND")
-    bg:SetAllPoints()
-    frame.qkBg = bg
-    local edges = {}
-    for i = 1, 4 do edges[i] = frame:CreateTexture(nil, "BORDER") end
-    edges[1]:SetPoint("TOPLEFT") edges[1]:SetPoint("TOPRIGHT") edges[1]:SetHeight(1)
-    edges[2]:SetPoint("BOTTOMLEFT") edges[2]:SetPoint("BOTTOMRIGHT") edges[2]:SetHeight(1)
-    edges[3]:SetPoint("TOPLEFT") edges[3]:SetPoint("BOTTOMLEFT") edges[3]:SetWidth(1)
-    edges[4]:SetPoint("TOPRIGHT") edges[4]:SetPoint("BOTTOMRIGHT") edges[4]:SetWidth(1)
-    frame.qkEdges = edges
-  end
-  frame.qkBg:SetColorTexture(0, 0, 0, alpha or 0.6)
-  for _, e in ipairs(frame.qkEdges) do e:SetColorTexture(0.4, 0.4, 0.4, math.min(1, (alpha or 0.6) + 0.2)) end
+  ns.Style.Panel(frame, alpha)
 end

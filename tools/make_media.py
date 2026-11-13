@@ -61,6 +61,54 @@ write_tga('dot', white(ss(lambda x, y: (x - 32) ** 2 + (y - 32) ** 2 <= 26 ** 2)
 # Ring.
 write_tga('ring', white(ss(lambda x, y: 22 ** 2 <= (x - 32) ** 2 + (y - 32) ** 2 <= 29 ** 2)))
 
+# --- Title bar and row icons (white, tintable) ---
+def seg(x, y, ax, ay, bx, by, w):
+    dx, dy = bx - ax, by - ay
+    t = max(0, min(1, ((x - ax) * dx + (y - ay) * dy) / (dx * dx + dy * dy)))
+    px, py = ax + t * dx, ay + t * dy
+    return (x - px) ** 2 + (y - py) ** 2 <= w * w
+
+# Chevron pointing down; rotate for the collapsed state.
+write_tga('chevron', white(ss(lambda x, y: seg(x, y, 14, 24, 32, 42, 5) or seg(x, y, 32, 42, 50, 24, 5))))
+
+# Minimize: bar near the bottom.
+write_tga('minimize', white(ss(lambda x, y: seg(x, y, 14, 44, 50, 44, 5))))
+
+# Close: cross.
+write_tga('close', white(ss(lambda x, y: seg(x, y, 16, 16, 48, 48, 5) or seg(x, y, 48, 16, 16, 48, 5))))
+
+# Next: triangle plus bar ("skip to next").
+next_pts = [(14, 12), (14, 52), (42, 32)]
+write_tga('next', white(ss(lambda x, y: inside_poly(next_pts, x, y) or (45 <= x <= 52 and 12 <= y <= 52))))
+
+# Gear: ring with eight teeth.
+def gear(x, y):
+    dx, dy = x - 32, y - 32
+    d = math.hypot(dx, dy)
+    if d < 9:
+        return False
+    if d <= 19:
+        return True
+    if d > 27:
+        return False
+    a = math.atan2(dy, dx) % (math.pi / 4)
+    return min(a, math.pi / 4 - a) * d <= 5.5
+write_tga('gear', white(ss(gear)))
+
+# Padlock, closed and open.
+def lock_body(x, y):
+    return 13 <= x <= 51 and 30 <= y <= 57
+
+def shackle(x, y, cy, both):
+    d = math.hypot(x - 32, y - cy)
+    if y <= cy and 10 <= d <= 16:
+        return True
+    if cy <= y <= 30 and 16 <= x <= 22:
+        return True
+    return both and cy <= y <= 30 and 42 <= x <= 48
+write_tga('lock', white(ss(lambda x, y: lock_body(x, y) or shackle(x, y, 22, True))))
+write_tga('unlock', white(ss(lambda x, y: lock_body(x, y) or shackle(x, y, 17, False))))
+
 # Coin: gold disc with darker rim.
 def coin(x, y):
     cov = ss(lambda a, b: (a - 32) ** 2 + (b - 32) ** 2 <= 28 ** 2)(x, y)

@@ -26,6 +26,21 @@ S["settings panel registers with verified signatures"] = function()
   T.eq(ns:GetSetting("tracker", "scale"), 1.2)
 end
 
+S["settings panel: subpages, new options and a real tooltip on every control"] = function()
+  local ns = stub.LoadAddon()
+  T.eq(#stub.subcategories, 4, "four subpages")
+  T.ok(stub.settings["QuestKompas_nav_scale"], "arrow scale registered")
+  T.ok(stub.settings["QuestKompas_general_minimap"], "minimap toggle registered")
+  local active = ns.L:GetActive()
+  local known, n = {}, 0
+  for _, text in pairs(active) do known[text] = true end
+  for name, tip in pairs(stub.tooltips) do
+    n = n + 1
+    T.ok(type(tip) == "string" and known[tip], "tooltip missing for: " .. name)
+  end
+  T.ok(n >= 50, "controls with a tooltip: " .. n)
+end
+
 S["a failing module in OnEnable is disabled, others keep working"] = function()
   local ns = stub.LoadAddon({ login = false })
   local broken = ns:RegisterModule("Broken", { OnEnable = function() error("boom") end })

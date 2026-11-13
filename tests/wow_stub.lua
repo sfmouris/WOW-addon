@@ -91,6 +91,8 @@ function regionMethods:SetHeight(h) self._h = h end
 function regionMethods:GetWidth() return self._w or 100 end
 function regionMethods:GetHeight() return self._h or 20 end
 function regionMethods:GetStringHeight() return 12 end
+function regionMethods:GetCenter() return 400, 300 end
+function regionMethods:GetEffectiveScale() return 1 end
 function regionMethods:SetScript(name, fn) self._scripts[name] = fn end
 function regionMethods:GetScript(name) return self._scripts[name] end
 function regionMethods:HookScript(name, fn) self._scripts[name] = fn end
@@ -119,7 +121,8 @@ frameMT = {
   __index = function(_, key)
     local m = regionMethods[key]
     if m then return m end
-    if key == "CreateTexture" or key == "CreateFontString" or key == "CreateAnimationGroup" then
+    if key == "CreateTexture" or key == "CreateFontString" or key == "CreateAnimationGroup"
+      or key == "CreateAnimation" then
       return function() return newRegion("region") end
     end
     -- WoW widget methods start with an upper-case letter; other keys are
@@ -282,6 +285,9 @@ _G.IsShiftKeyDown = function() return stub.shift end
 _G.IsControlKeyDown = function() return false end
 _G.IsAltKeyDown = function() return false end
 _G.GetPlayerFacing = function() return stub.facing end
+_G.GetCursorPosition = function() return stub.cursor[1], stub.cursor[2] end
+_G.GetBindingKey = function(action) return stub.bindings[action] end
+_G.GetBindingText = function(key) return key end
 _G.GetBuildInfo = function() return "1.60.1", "70888", "Nov 10 2026", 16001 end
 _G.PlaySound = noop
 _G.SOUNDKIT = { MAP_PING = 3175 }
@@ -343,6 +349,11 @@ _G.Settings = {
     assertType(name, "string", "category name")
     return { GetID = function() return 42 end }, { AddInitializer = function(_, i) assert(i) end }
   end,
+  RegisterVerticalLayoutSubcategory = function(parent, name)
+    assertType(parent, "table", "parent category") assertType(name, "string", "subcategory name")
+    stub.subcategories[#stub.subcategories + 1] = name
+    return { GetID = function() return 43 end }, { AddInitializer = function(_, i) assert(i) end }
+  end,
   RegisterProxySetting = function(cat, variable, varType, name, default, get, set)
     assertType(cat, "table", "category") assertType(variable, "string", "variable")
     assertType(varType, "string", "varType") assertType(name, "string", "name")
@@ -352,10 +363,17 @@ _G.Settings = {
     stub.settings[variable] = { get = get, set = set }
     return { GetVariableType = function() return varType end, GetName = function() return name end }
   end,
-  CreateCheckbox = function(cat, setting) assert(cat and setting) end,
-  CreateSlider = function(cat, setting, options) assert(cat and setting and options) end,
-  CreateDropdown = function(cat, setting, options)
+  CreateCheckbox = function(cat, setting, tooltip)
+    assert(cat and setting)
+    stub.tooltips[setting.GetName()] = tooltip
+  end,
+  CreateSlider = function(cat, setting, options, tooltip)
+    assert(cat and setting and options)
+    stub.tooltips[setting.GetName()] = tooltip
+  end,
+  CreateDropdown = function(cat, setting, options, tooltip)
     assert(cat and setting) assertType(options, "function", "dropdown options")
+    stub.tooltips[setting.GetName()] = tooltip
     options()
   end,
   CreateSliderOptions = function(minV, maxV, rate)
@@ -404,6 +422,9 @@ function stub.Reset()
   stub.sent, stub.chat, stub.center, stub.errors = {}, {}, {}, {}
   stub.items = {}
   stub.settings = {}
+  stub.cursor, stub.bindings = { 0, 0 }, {}
+  _G.Minimap = _G.CreateFrame("Frame")
+  stub.subcategories, stub.tooltips = {}, {}
   stub.unknownEvents = {}
   _G.QuestKompasDB, _G.QuestKompasCharDB = nil, nil
   _G.SlashCmdList = {}

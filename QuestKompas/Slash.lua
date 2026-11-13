@@ -28,6 +28,7 @@ commands.reset = function()
   if ns.Tracker then ns.Tracker:ResetPosition() end
   if ns.Navigator then ns.Navigator:ResetPosition() end
   if ns.ItemBar then ns.ItemBar:ResetPosition() end
+  if ns.MinimapButton then ns.MinimapButton:ResetPosition() end
   ns:Print(L["POSITIONS_RESET"])
 end
 

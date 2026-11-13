@@ -187,6 +187,21 @@ S["navigator: source layers and arrow without errors"] = function()
   T.clean(ns)
 end
 
+S["navigator: arrow colour runs from green ahead to red behind"] = function()
+  local ns = stub.LoadAddon({ login = false })
+  local function near(a, b) return math.abs(a - b) < 1e-6 end
+  local r, g = ns.Navigator.ArrowColor(0)
+  T.ok(near(r, 0.25) and near(g, 1), "ahead is green")
+  r, g = ns.Navigator.ArrowColor(math.pi / 2)
+  T.ok(near(r, 1) and near(g, 1), "sideways is yellow")
+  r, g = ns.Navigator.ArrowColor(-math.pi / 2)
+  T.ok(near(r, 1) and near(g, 1), "sign does not matter")
+  r, g = ns.Navigator.ArrowColor(math.pi)
+  T.ok(near(r, 1) and near(g, 0.25), "behind is red")
+  r, g = ns.Navigator.ArrowColor(2 * math.pi)
+  T.ok(near(r, 0.25) and near(g, 1), "a full turn is ahead again")
+end
+
 S["navigator: /qk way parses coordinates and zones"] = function()
   stub.pos = { 52, 0.5, 0.5 }
   local ns = stub.LoadAddon()
@@ -236,6 +251,10 @@ S["itembar: nearest quest first, max buttons, no changes in combat"] = function(
   T.ok(btn, "button 1 exists")
   T.eq(btn:GetAttribute("type"), "item")
   T.eq(btn:GetAttribute("item"), "item:5060")
+  T.eq(btn.hotkey:GetText(), "", "no key bound yet")
+  stub.bindings["CLICK QuestKompasItemButton1:LeftButton"] = "F5"
+  stub.FireEvent("UPDATE_BINDINGS")
+  T.eq(btn.hotkey:GetText(), "F5", "key text follows the binding")
   stub.combat = true
   stub.log[#stub.log + 1] = H.quest(8, { item = "|Hitem:6000|h" })
   stub.FireEvent("QUEST_LOG_UPDATE")
@@ -244,6 +263,44 @@ S["itembar: nearest quest first, max buttons, no changes in combat"] = function(
   stub.combat = false
   stub.FireEvent("PLAYER_REGEN_ENABLED")
   T.eq(ns.ItemBar.dirty, false)
+  T.clean(ns)
+end
+
+S["minimap button: angle maths, clicks, drag and the setting"] = function()
+  stub.log = H.log("Westfall", { H.quest(601) })
+  local ns = stub.LoadAddon()
+  local MB = ns.MinimapButton
+  local function near(a, b) return math.abs(a - b) < 1e-6 end
+  local x, y = MB.Offset(0, 80)
+  T.ok(near(x, 80) and near(y, 0), "0 degrees is east")
+  x, y = MB.Offset(90, 80)
+  T.ok(near(x, 0) and near(y, 80), "90 degrees is north")
+  T.ok(near(MB.AngleTo(0, 0, 10, 0), 0))
+  T.ok(near(MB.AngleTo(0, 0, 0, -10), 270))
+  T.ok(near(MB.AngleTo(5, 5, 5, 5), 215), "cursor on the centre falls back to the default")
+
+  local btn = MB:GetButton()
+  T.ok(btn and btn:IsShown(), "button shown by default")
+  btn:GetScript("OnEnter")(btn)
+  btn:GetScript("OnLeave")(btn)
+  local shown = ns.Tracker:GetFrame():IsShown()
+  btn:GetScript("OnClick")(btn, "LeftButton")
+  T.eq(ns.Tracker:GetFrame():IsShown(), not shown, "left click toggles the tracker")
+  btn:GetScript("OnClick")(btn, "RightButton")
+  T.ok(stub.calls[#stub.calls]:find("OpenSettings", 1, true), "right click opens the settings")
+
+  -- Drag: cursor straight above the minimap centre (stub centre is 400, 300).
+  stub.cursor = { 400, 500 }
+  btn:GetScript("OnDragStart")(btn)
+  btn:GetScript("OnUpdate")(btn, 0.02)
+  btn:GetScript("OnDragStop")(btn)
+  T.ok(near(ns.cdb.positions.minimap, 90), "angle saved per character")
+  T.eq(btn:GetScript("OnUpdate"), nil, "drag update removed")
+  SlashCmdList.QUESTKOMPAS("reset")
+  T.eq(ns.cdb.positions.minimap, nil)
+
+  ns:SetSetting("general", "minimap", false)
+  T.eq(btn:IsShown(), false, "setting hides the button")
   T.clean(ns)
 end
 

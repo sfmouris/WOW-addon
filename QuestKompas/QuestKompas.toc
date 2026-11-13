@@ -2,7 +2,7 @@
 ## Title: QuestKompas
 ## Notes: Questhulp voor WoW Forever: tracker, navigatie, auto-quest en een zelflerende locatiedatabase.
 ## Author: Scott
-## Version: 0.8.0
+## Version: 0.9.0
 ## SavedVariables: QuestKompasDB
 ## SavedVariablesPerCharacter: QuestKompasCharDB
 ## OptionalDeps: Questie, TomTom, Pawn
@@ -26,6 +26,7 @@ Core\Combat.lua
 Core\DB.lua
 Core\Util.lua
 Core\Debug.lua
+UI\Style.lua
 
 Modules\QuestData.lua
 Modules\Learn.lua
@@ -43,5 +44,6 @@ Modules\Bridges.lua
 
 UI\Widgets.lua
 UI\Options.lua
+UI\MinimapButton.lua
 UI\ExportFrame.lua
 Slash.lua

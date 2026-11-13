@@ -1,14 +1,18 @@
 -- QuestKompas: own quest window (spec 4.3).
-local ADDON, ns = ...
+local _, ns = ...
 
 local T = ns:RegisterModule("Tracker")
-local C, U, L = ns.Compat, ns.Util, ns.L
+local C, U, L, Style = ns.Compat, ns.Util, ns.L, ns.Style
 
-local MEDIA = "Interface\\AddOns\\" .. ADDON .. "\\UI\\Media\\"
+local MEDIA, COL, BAR_H = Style.MEDIA, Style.color, Style.BAR_H
 local ICON_SKULL = "|TInterface\\TargetingFrame\\UI-TargetingFrame-Skull:12:12|t"
 local ICON_LOCK = "|TInterface\\LFGFrame\\UI-LFG-ICON-LOCK:12:12|t"
 local ICON_CLOCK = "|TInterface\\Icons\\INV_Misc_PocketWatch_01:12:12|t"
-local TITLE_H, OBJ_H, HEADER_H, PAD = 15, 13, 16, 6
+local ICON_DONE = Style.Icon("check", 11, COL.good)
+local TITLE_H, OBJ_H, HEADER_H, PAD = 18, 13, 18, 6
+local PROG_H, QUEST_GAP, HEADER_GAP = 4, 3, 4
+-- One "row" of the maxRows setting, in pixels of visible height.
+local ROW_UNIT = 14
 
 ----------------------------------------------------------------------------
 -- Pure logic: sorting and grouping (tests/spec_tracker.lua)
@@ -74,10 +78,31 @@ function T.CountText(n, max)
   return string.format("%d/%d", n, max)
 end
 
+-- Overall progress of a quest, 0 to 1: the average over its objectives, so
+-- a "talk to" step weighs as much as "kill 10". nil without objectives.
+function T.Progress(q)
+  if q.isComplete then return 1 end
+  local n, sum = 0, 0
+  for _, o in ipairs(q.objectives or {}) do
+    local need = math.max(o.need or 1, 1)
+    local done = o.finished and need or math.min(math.max(o.done or 0, 0), need)
+    n = n + 1
+    sum = sum + done / need
+  end
+  if n == 0 then return nil end
+  return sum / n
+end
+
+-- Visible height and scroll range for a content height and the row limit.
+function T.ViewHeight(contentHeight, maxRows)
+  local view = math.min(contentHeight, math.max(maxRows, 1) * ROW_UNIT)
+  return view, math.max(0, contentHeight - view)
+end
+
 ----------------------------------------------------------------------------
 -- Frames
 ----------------------------------------------------------------------------
-local frame, content, footer, nextBtn
+local frame, scroll, content, footer, footerLine, thumb, nextBtn
 local headerPool, questPool, objPool = {}, {}, {}
 local used = { header = 0, quest = 0, obj = 0 }
 local shownQuestRows = {}
@@ -209,8 +234,27 @@ local function acquire(kind)
   if kind == "header" then
     row = CreateFrame("Button", nil, content)
     row:SetHeight(HEADER_H)
+    row.hl = row:CreateTexture(nil, "HIGHLIGHT")
+    row.hl:SetAllPoints()
+    row.hl:SetColorTexture(1, 1, 1, 0.05)
+    row.chev = row:CreateTexture(nil, "ARTWORK")
+    row.chev:SetSize(10, 10)
+    row.chev:SetPoint("LEFT", 2, 0)
+    row.chev:SetTexture(MEDIA .. "chevron")
+    row.chev:SetVertexColor(COL.dim[1], COL.dim[2], COL.dim[3])
+    row.count = row:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    row.count:SetPoint("RIGHT", -4, 0)
+    row.count:SetJustifyH("RIGHT")
     row.text = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    row.text:SetPoint("LEFT", 2, 0)
+    row.text:SetPoint("LEFT", 16, 0)
+    row.text:SetPoint("RIGHT", row.count, "LEFT", -4, 0)
+    row.text:SetJustifyH("LEFT")
+    row.text:SetWordWrap(false)
+    row.line = row:CreateTexture(nil, "BORDER")
+    row.line:SetPoint("BOTTOMLEFT")
+    row.line:SetPoint("BOTTOMRIGHT")
+    row.line:SetHeight(1)
+    row.line:SetColorTexture(COL.edge[1], COL.edge[2], COL.edge[3], 0.6)
     row:SetScript("OnClick", function(self)
       if self.groupKey then
         ns.cdb.collapsed[self.groupKey] = not ns.cdb.collapsed[self.groupKey]
@@ -224,33 +268,39 @@ local function acquire(kind)
     row.hl = row:CreateTexture(nil, "HIGHLIGHT")
     row.hl:SetAllPoints()
     row.hl:SetColorTexture(1, 1, 1, 0.08)
-    row.flash = row:CreateTexture(nil, "BACKGROUND")
+    row.flash = row:CreateTexture(nil, "BACKGROUND", nil, 2)
     row.flash:SetAllPoints()
     row.flash:SetColorTexture(1, 0.9, 0.3, 0.35)
     row.flash:Hide()
-    row.target = row:CreateTexture(nil, "BACKGROUND")
+    row.targetBg = row:CreateTexture(nil, "BACKGROUND", nil, 1)
+    row.targetBg:SetAllPoints()
+    row.targetBg:SetColorTexture(COL.accent[1], COL.accent[2], COL.accent[3], 0.10)
+    row.targetBg:Hide()
+    row.target = row:CreateTexture(nil, "BORDER")
     row.target:SetPoint("TOPLEFT") row.target:SetPoint("BOTTOMLEFT") row.target:SetWidth(2)
-    row.target:SetColorTexture(0.3, 0.9, 1, 0.9)
+    row.target:SetColorTexture(COL.accent[1], COL.accent[2], COL.accent[3], 0.9)
     row.target:Hide()
     row.swatch = row:CreateTexture(nil, "ARTWORK")
-    row.swatch:SetSize(3, TITLE_H - 4)
-    row.swatch:SetPoint("LEFT", 4, 0)
+    row.swatch:SetSize(3, TITLE_H - 6)
+    row.swatch:SetPoint("LEFT", 5, 0)
     row.order = row:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     row.order:SetPoint("LEFT", 10, 0)
     row.order:SetWidth(16)
     row.order:SetJustifyH("RIGHT")
     row.dir = row:CreateTexture(nil, "ARTWORK")
     row.dir:SetSize(11, 11)
-    row.dir:SetPoint("RIGHT", -2, 0)
+    row.dir:SetPoint("RIGHT", -3, 0)
     row.dir:SetTexture(MEDIA .. "arrow")
     row.dist = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     row.dist:SetPoint("RIGHT", row.dir, "LEFT", -3, 0)
     row.dist:SetJustifyH("RIGHT")
     row.title = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    row.title:SetPoint("LEFT", row.order, "RIGHT", 3, 0)
+    row.title:SetPoint("LEFT", row.order, "RIGHT", 4, 0)
     row.title:SetPoint("RIGHT", row.dist, "LEFT", -4, 0)
     row.title:SetJustifyH("LEFT")
     row.title:SetWordWrap(false)
+    row.prog = Style.ProgressBar(row, 2)
+    row.prog:SetPoint("TOPLEFT", row, "BOTTOMLEFT", 30, -1)
     row:SetScript("OnClick", function(self, button)
       if not self.quest then return end
       if button == "RightButton" then
@@ -266,8 +316,18 @@ local function acquire(kind)
   else
     row = CreateFrame("Frame", nil, content)
     row:SetHeight(OBJ_H)
+    row.dot = row:CreateTexture(nil, "ARTWORK")
+    row.dot:SetSize(5, 5)
+    row.dot:SetPoint("LEFT", 33, 0)
+    row.dot:SetTexture(MEDIA .. "dot")
+    row.dot:SetVertexColor(COL.dim[1], COL.dim[2], COL.dim[3])
+    row.check = row:CreateTexture(nil, "ARTWORK")
+    row.check:SetSize(9, 9)
+    row.check:SetPoint("LEFT", 31, 0)
+    row.check:SetTexture(MEDIA .. "check")
+    row.check:SetVertexColor(COL.faint[1], COL.faint[2], COL.faint[3])
     row.text = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    row.text:SetPoint("LEFT", 32, 0)
+    row.text:SetPoint("LEFT", 43, 0)
     row.text:SetPoint("RIGHT", -4, 0)
     row.text:SetJustifyH("LEFT")
     row.text:SetWordWrap(false)
@@ -278,7 +338,7 @@ end
 
 local function releaseAll()
   for kind, pool in pairs({ header = headerPool, quest = questPool, obj = objPool }) do
-    for i = 1, #pool do pool[i]:Hide() pool[i].quest = nil end
+    for i = 1, #pool do pool[i]:Hide() pool[i].quest = nil pool[i].bearing = nil end
     used[kind] = 0
   end
   wipe(shownQuestRows)
@@ -286,11 +346,13 @@ end
 
 local function setDistance(row, q)
   local d = ns:IsModuleEnabled("Navigator") and ns.Navigator:GetQuestDistance(q)
+  row.bearing = nil
   if d then
     row.dist:SetText(string.format(L["YARDS_SHORT_FMT"], d))
     local bearing = ns.Navigator:GetQuestBearing(q.questID)
     local facing = C.GetPlayerFacing()
     if bearing and facing then
+      row.bearing = bearing
       row.dir:SetRotation(ns.Geo.RelativeAngle(bearing, facing))
       row.dir:Show()
     else
@@ -321,7 +383,7 @@ local function addQuest(q, y, width, planOrder, hideDone, targetID)
   local col = U.DifficultyColor(q.difficulty)
   local title = string.format("[%d] %s", q.level, q.title)
   if q.isFailed then title = title .. " |cffff3030(" .. L["FAILED"] .. ")|r"
-  elseif q.isComplete then title = title .. " |cff40ff40(" .. L["DONE"] .. ")|r" end
+  elseif q.isComplete then title = ICON_DONE .. " " .. title end
   row.title:SetText(title .. markers(q))
   row.title:SetTextColor(col.r, col.g, col.b)
   local c = q.color or U.PALETTE[1]
@@ -329,11 +391,27 @@ local function addQuest(q, y, width, planOrder, hideDone, targetID)
   local n = planOrder and planOrder[q.questID]
   row.order:SetText(n and tostring(n) or "")
   row.target:SetShown(targetID == q.questID)
-  row.flash:SetShown((flashUntil[q.questID] or 0) > C.GetTime())
+  row.targetBg:SetShown(targetID == q.questID)
+  -- A pending flash plays once on the fresh row; anything else is reset, so
+  -- a reused row never keeps a half-played flash.
+  if (flashUntil[q.questID] or 0) > C.GetTime() then
+    flashUntil[q.questID] = nil
+    Style.Flash(row.flash, 0.3)
+  else
+    Style.StopFlash(row.flash)
+  end
   setDistance(row, q)
   shownQuestRows[#shownQuestRows + 1] = row
   y = y + TITLE_H
   local rows = 1
+  local frac = (not q.isComplete) and T.Progress(q) or nil
+  if frac then
+    row.prog:SetProgress(frac, width - 34, c[1], c[2], c[3])
+    row.prog:Show()
+    y = y + PROG_H
+  else
+    row.prog:Hide()
+  end
   if not q.isComplete then
     for _, o in ipairs(q.objectives) do
       if not (hideDone and o.finished) then
@@ -346,24 +424,43 @@ local function addQuest(q, y, width, planOrder, hideDone, targetID)
           text = string.format("%s %d/%d", text, o.done, o.need)
         end
         orow.text:SetText(text)
-        if o.finished then orow.text:SetTextColor(0.5, 0.5, 0.5) else orow.text:SetTextColor(0.85, 0.85, 0.85) end
+        orow.dot:SetShown(not o.finished)
+        orow.check:SetShown(o.finished and true or false)
+        if o.finished then
+          orow.text:SetTextColor(COL.faint[1], COL.faint[2], COL.faint[3])
+        else
+          orow.text:SetTextColor(0.85, 0.85, 0.85)
+        end
         y = y + OBJ_H
         rows = rows + 1
       end
     end
   end
-  return y, rows
+  return y + QUEST_GAP, rows
 end
 
-local function addHeader(text, groupKey, y, width)
+-- groupKey nil: plain info line (no chevron, not clickable).
+local function addHeader(text, groupKey, y, width, count, col)
+  if y > 0 then y = y + HEADER_GAP end
   local row = acquire("header")
   row.groupKey = groupKey
   row:ClearAllPoints()
   row:SetPoint("TOPLEFT", 0, -y)
   row:SetWidth(width)
-  local mark = groupKey and (ns.cdb.collapsed[groupKey] and "[+] " or "[-] ") or ""
-  row.text:SetText(mark .. text)
-  return y + HEADER_H
+  col = col or COL.dim
+  row.text:SetTextColor(col[1], col[2], col[3])
+  row.count:SetText(count and tostring(count) or "")
+  if groupKey then
+    row.text:SetText(text:upper())
+    row.chev:SetRotation(ns.cdb.collapsed[groupKey] and math.pi / 2 or 0)
+    row.chev:Show()
+    row.line:Show()
+  else
+    row.text:SetText(text)
+    row.chev:Hide()
+    row.line:Hide()
+  end
+  return y + HEADER_H + 2
 end
 
 local function footerText()
@@ -374,7 +471,21 @@ local function footerText()
     local n = ns.Stats:QuestsToLevel()
     if n then parts[#parts + 1] = string.format(L["QUESTS_TO_LEVEL_FMT"], n) end
   end
-  return table.concat(parts, "  |  ")
+  return table.concat(parts, "  |cff6b7380·|r  ")
+end
+
+local function setScroll(value)
+  local max = T.scrollMax or 0
+  value = U.Clamp(value or 0, 0, max)
+  T.scrollPos = value
+  scroll:SetVerticalScroll(value)
+  if max <= 0 then thumb:Hide() return end
+  local view = T.viewHeight or 1
+  local size = math.max(12, view * view / (view + max))
+  thumb:ClearAllPoints()
+  thumb:SetPoint("TOPRIGHT", scroll, "TOPRIGHT", 4, -(view - size) * value / max)
+  thumb:SetHeight(size)
+  thumb:Show()
 end
 
 function T:Rebuild()
@@ -391,6 +502,19 @@ function T:Rebuild()
 
   local list = ns.QuestData:GetList()
   local navOn = ns:IsModuleEnabled("Navigator")
+  nextBtn:SetShown(navOn and ns:IsModuleEnabled("Planner"))
+
+  local minimized = ns.cdb.collapsed.all == true
+  frame.minBtn:SetIcon(minimized and "chevron" or "minimize")
+  if minimized then
+    frame.count:SetText(T.CountText(ns.QuestData:Count(), C.GetMaxQuests()))
+    scroll:Hide() footer:Hide() footerLine:Hide() thumb:Hide()
+    frame:SetHeight(BAR_H)
+    return
+  end
+  frame.count:SetText("")
+  scroll:Show()
+
   local mapID = C.GetPlayerMapID()
   local zoneName = C.GetMapName(mapID)
   if navOn then
@@ -405,38 +529,38 @@ function T:Rebuild()
   local planOrder = ns:IsModuleEnabled("Planner") and ns.Planner:GetOrderMap() or nil
   local targetID = navOn and ns.Navigator:GetTargetQuestID() or nil
 
-  local y, rows, cut = 0, 0, 0
-  local function section(title, key, quests, collapsedDefault)
+  local y = 0
+  local function section(title, key, quests, collapsedDefault, col)
     if #quests == 0 then return end
     local collapsed = ns.cdb.collapsed[key]
     if collapsed == nil then collapsed = collapsedDefault end
     ns.cdb.collapsed[key] = collapsed
-    y = addHeader(string.format("%s (%d)", title, #quests), key, y, inner)
+    y = addHeader(title, key, y, inner, #quests, col)
     if collapsed then return end
     for _, q in ipairs(quests) do
-      if rows >= maxRows then cut = cut + 1 else
-        local used_
-        y, used_ = addQuest(q, y, inner, planOrder, hideDone, targetID)
-        rows = rows + used_
-      end
+      y = addQuest(q, y, inner, planOrder, hideDone, targetID)
     end
   end
-  section(L["GROUP_READY"], "ready", ready, false)
-  section(zoneName or L["GROUP_HERE"], "here", here, false)
+  section(L["GROUP_READY"], "ready", ready, false, COL.good)
+  section(zoneName or L["GROUP_HERE"], "here", here, false, COL.text)
   section(L["GROUP_OTHER"], "other", other, true)
   if #list == 0 then
     y = addHeader(L["NO_QUESTS"], nil, y, inner)
   end
-  if cut > 0 then
-    y = addHeader(string.format(L["MORE_FMT"], cut), nil, y, inner)
-  end
 
-  content:SetHeight(math.max(y, 1))
+  -- Everything is built; more than maxRows worth of height scrolls.
+  local view, range = T.ViewHeight(y, maxRows)
+  content:SetSize(inner, math.max(y, 1))
+  scroll:SetHeight(math.max(view, 1))
+  scroll:EnableMouseWheel(range > 0)
+  self.viewHeight, self.scrollMax = view, range
+  setScroll(self.scrollPos)
+
   local showFooter = ns:GetSetting("tracker", "showFooter")
   footer:SetShown(showFooter)
+  footerLine:SetShown(showFooter)
   if showFooter then footer:SetText(footerText()) end
-  nextBtn:SetShown(ns:IsModuleEnabled("Planner") and ns:IsModuleEnabled("Navigator"))
-  frame:SetHeight(y + 22 + (showFooter and 16 or 0) + PAD)
+  frame:SetHeight(BAR_H + 4 + view + 2 + (showFooter and 20 or 0))
   if start then
     self.lastBuildMs = debugprofilestop() - start
     ns.Debug:Trace(string.format("tracker rebuild %.2f ms (%d quests)", self.lastBuildMs, #list))
@@ -450,7 +574,7 @@ end
 -- Every second: distances and direction icons only; resort when needed.
 local lastOrder = ""
 local function tick()
-  if not frame or not frame:IsShown() or C.InCombat() then return end
+  if not frame or not frame:IsShown() or C.InCombat() or ns.cdb.collapsed.all then return end
   ns.QuestData:RefreshDistances()
   if ns:GetSetting("tracker", "sort") == "distance" and ns:IsModuleEnabled("Navigator") then
     local sorted = T.SortQuests(ns.QuestData:GetList(), "distance",
@@ -465,19 +589,30 @@ local function tick()
     end
   end
   for _, row in ipairs(shownQuestRows) do
-    if row.quest then
-      setDistance(row, row.quest)
-      if row.flash:IsShown() and (flashUntil[row.quest.questID] or 0) <= C.GetTime() then row.flash:Hide() end
-    end
+    if row.quest then setDistance(row, row.quest) end
+  end
+end
+
+-- Ten times a second: turn the visible direction icons with the player.
+-- Pure display on cached bearings, so it also runs in combat.
+local turnAcc = 0
+local function onUpdate(_, elapsed)
+  turnAcc = turnAcc + elapsed
+  if turnAcc < 0.1 then return end
+  turnAcc = 0
+  if #shownQuestRows == 0 then return end
+  local facing = C.GetPlayerFacing()
+  if not facing then return end
+  for _, row in ipairs(shownQuestRows) do
+    if row.bearing then row.dir:SetRotation(ns.Geo.RelativeAngle(row.bearing, facing)) end
   end
 end
 
 local function applyLook()
   local scale = U.Clamp(ns:GetSetting("tracker", "scale") or 1, 0.7, 1.5)
   frame:SetScale(scale)
-  U.SkinFrame(frame, ns:GetSetting("tracker", "bgAlpha") or 0.6)
-  local locked = ns:GetSetting("tracker", "locked")
-  frame.lockIcon:SetText(locked and L["LOCKED"] or "")
+  Style.Panel(frame, ns:GetSetting("tracker", "bgAlpha") or 0.6)
+  frame.lockBtn:SetIcon(ns:GetSetting("tracker", "locked") and "lock" or "unlock")
 end
 
 local function createFrame()
@@ -495,28 +630,55 @@ local function createFrame()
     self:StopMovingOrSizing()
     savePosition()
   end)
+  frame:SetScript("OnUpdate", onUpdate)
 
-  local title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-  title:SetPoint("TOPLEFT", PAD, -5)
-  title:SetText("QuestKompas")
-  frame.lockIcon = frame:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-  frame.lockIcon:SetPoint("LEFT", title, "RIGHT", 6, 0)
+  local title = Style.TitleBar(frame, "QuestKompas", "icon")
+  frame.count = frame:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+  frame.count:SetPoint("LEFT", title, "RIGHT", 8, 0)
 
-  nextBtn = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
-  nextBtn:SetSize(64, 16)
-  nextBtn:SetPoint("TOPRIGHT", -PAD, -3)
-  nextBtn:SetText(L["NEXT"])
-  nextBtn:SetScript("OnClick", function() ns.Navigator:Next(ns.Navigator:GetTargetQuestID()) end)
+  -- Title bar buttons, right to left.
+  frame.minBtn = Style.IconButton(frame, "minimize", function()
+    return ns.cdb.collapsed.all and L["TIP_EXPAND"] or L["TIP_MINIMIZE"]
+  end, function() T:ToggleMinimized() end)
+  frame.minBtn:SetPoint("TOPRIGHT", -4, -3)
+  frame.lockBtn = Style.IconButton(frame, "unlock", function()
+    return ns:GetSetting("tracker", "locked") and L["TIP_UNLOCK"] or L["TIP_LOCK"]
+  end, function() T:ToggleLock() end)
+  frame.lockBtn:SetPoint("RIGHT", frame.minBtn, "LEFT", -2, 0)
+  frame.gearBtn = Style.IconButton(frame, "gear", L["TIP_OPTIONS"], function() ns.Options:Open() end)
+  frame.gearBtn:SetPoint("RIGHT", frame.lockBtn, "LEFT", -2, 0)
+  nextBtn = Style.IconButton(frame, "next", L["TIP_NEXT"], function()
+    ns.Navigator:Next(ns.Navigator:GetTargetQuestID())
+  end)
+  nextBtn:SetPoint("RIGHT", frame.gearBtn, "LEFT", -2, 0)
+  frame.buttons = { frame.minBtn, frame.lockBtn, frame.gearBtn, nextBtn }
 
-  content = CreateFrame("Frame", nil, frame)
-  content:SetPoint("TOPLEFT", PAD, -22)
-  content:SetPoint("TOPRIGHT", -PAD, -22)
-  content:SetHeight(1)
+  scroll = CreateFrame("ScrollFrame", nil, frame)
+  scroll:SetPoint("TOPLEFT", PAD, -(BAR_H + 4))
+  scroll:SetPoint("TOPRIGHT", -PAD, -(BAR_H + 4))
+  scroll:SetHeight(1)
+  scroll:SetScript("OnMouseWheel", function(_, delta)
+    setScroll((T.scrollPos or 0) - delta * 3 * ROW_UNIT)
+  end)
+  content = CreateFrame("Frame", nil, scroll)
+  content:SetSize(260 - 2 * PAD, 1)
+  scroll:SetScrollChild(content)
 
+  thumb = frame:CreateTexture(nil, "OVERLAY")
+  thumb:SetWidth(2)
+  thumb:SetColorTexture(COL.accent[1], COL.accent[2], COL.accent[3], 0.7)
+  thumb:Hide()
+
+  footerLine = frame:CreateTexture(nil, "BORDER")
+  footerLine:SetPoint("BOTTOMLEFT", PAD, 20)
+  footerLine:SetPoint("BOTTOMRIGHT", -PAD, 20)
+  footerLine:SetHeight(1)
+  footerLine:SetColorTexture(COL.edge[1], COL.edge[2], COL.edge[3], 0.6)
   footer = frame:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-  footer:SetPoint("BOTTOMLEFT", PAD, 5)
-  footer:SetPoint("BOTTOMRIGHT", -PAD, 5)
+  footer:SetPoint("BOTTOMLEFT", PAD, 6)
+  footer:SetPoint("BOTTOMRIGHT", -PAD, 6)
   footer:SetJustifyH("LEFT")
+  footer:SetWordWrap(false)
 
   applyPosition()
   applyLook()
@@ -555,6 +717,11 @@ function T:Toggle()
   self:SetShown(not (frame and frame:IsShown()))
 end
 
+function T:ToggleMinimized()
+  ns.cdb.collapsed.all = not ns.cdb.collapsed.all or nil
+  self:Rebuild()
+end
+
 function T:ToggleLock()
   ns:SetSetting("tracker", "locked", not ns:GetSetting("tracker", "locked"))
   if frame then applyLook() end
@@ -566,8 +733,10 @@ function T:ResetPosition()
   if frame then applyPosition() end
 end
 
+-- Marks the quest; the next rebuild plays the flash on its row.
 function T:Flash(questID)
-  flashUntil[questID] = C.GetTime() + 0.3
+  flashUntil[questID] = C.GetTime() + 1.5
+  self:RequestRebuild()
 end
 
 function T:GetFrame()
@@ -617,7 +786,8 @@ function T:OnCombatStart()
     frame:EnableMouse(false)
     for i = 1, used.quest do questPool[i]:EnableMouse(false) end
     for i = 1, used.header do headerPool[i]:EnableMouse(false) end
-    nextBtn:EnableMouse(false)
+    for _, b in ipairs(frame.buttons) do b:EnableMouse(false) end
+    scroll:EnableMouseWheel(false)
   end
 end
 
@@ -627,7 +797,8 @@ function T:OnCombatEnd()
     frame:EnableMouse(true)
     for i = 1, #questPool do questPool[i]:EnableMouse(true) end
     for i = 1, #headerPool do headerPool[i]:EnableMouse(true) end
-    nextBtn:EnableMouse(true)
+    for _, b in ipairs(frame.buttons) do b:EnableMouse(true) end
+    scroll:EnableMouseWheel((self.scrollMax or 0) > 0)
     if self.dirty then self:Rebuild() end
   end
 end
